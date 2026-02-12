@@ -1,0 +1,110 @@
+/* ================================
+   GLOBAL RESET & BASE STYLES
+   Customer App – Happy Ivan
+================================ */
+
+
+
+/* ---------- RESET ---------- */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ---------- HTML / BODY ---------- */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: var(--font-size-md);
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  line-height: 1.6;
+}
+
+/* ---------- MEDIA ---------- */
+img {
+  max-width: 100%;
+  display: block;
+}
+
+/* ---------- LINKS ---------- */
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ---------- LIST ---------- */
+ul {
+  list-style: none;
+}
+
+/* ---------- BUTTON RESET ---------- */
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* ---------- FORM ELEMENTS ---------- */
+input,
+select,
+textarea {
+  width: 100%;
+  font-family: inherit;
+  font-size: var(--font-size-sm);
+  padding: var(--space-sm) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: var(--border-light);
+  outline: none;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
+}
+
+/* ---------- SCROLLBAR ---------- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+
+.product-title {
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: #212121;
+  margin-bottom: 8px;
+  letter-spacing: 0.2px;
+}
+
+.product-variant {
+  font-weight: 400;
+  color: #212121;
+  margin-left: 6px;
+}
+
+.product-title {
+  font-weight: 500 !important;
+}

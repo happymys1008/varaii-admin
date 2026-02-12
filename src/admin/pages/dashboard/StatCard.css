@@ -1,0 +1,105 @@
+/* ================= STAT CARD BASE ================= */
+
+.stat-card {
+  background: #1f2937;
+  border-radius: 18px;
+  padding: 22px 24px;
+  color: #ffffff;
+  position: relative;
+
+  /*  IMPORTANT FOR SAME SIZE */
+  min-height: 130px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  transition: all 0.35s ease;
+  cursor: pointer;
+}
+
+/*  HOVER EFFECT (SABKE LIYE SAME) */
+.stat-card:hover {
+  transform: translateY(-6px);
+}
+
+/* ================= TEXT ================= */
+
+.stat-card h4 {
+  font-size: 14px;
+  margin-bottom: 6px;
+  font-weight: 500;
+  opacity: 0.9;
+}
+
+.stat-card h1 {
+  font-size: 34px;
+  margin: 6px 0;
+  font-weight: 700;
+}
+
+.stat-card span {
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+/* ================= COLORS ================= */
+
+/*  TOTAL ORDERS */
+.stat-card.blue {
+  border-left: 6px solid #0d6efd;
+}
+.stat-card.blue h1 {
+  color: #0d6efd;
+}
+.stat-card.blue:hover {
+  box-shadow: 0 14px 34px rgba(13, 110, 253, 0.45);
+}
+
+/*  DELIVERED */
+.stat-card.green {
+  border-left: 6px solid #198754;
+}
+.stat-card.green h1 {
+  color: #198754;
+}
+.stat-card.green:hover {
+  box-shadow: 0 14px 34px rgba(25, 135, 84, 0.45);
+}
+
+/*  PENDING */
+.stat-card.orange {
+  border-left: 6px solid #fd7e14;
+}
+.stat-card.orange h1 {
+  color: #fd7e14;
+}
+.stat-card.orange:hover {
+  box-shadow: 0 14px 34px rgba(253, 126, 20, 0.45);
+}
+
+/*  CANCELLED (SPECIAL FEEL) */
+.stat-card.red {
+  border-left: 6px solid #dc3545;
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.14),
+    rgba(31, 41, 55, 1)
+  );
+}
+
+.stat-card.red h4 {
+  color: #f1aeb5;
+}
+
+.stat-card.red h1 {
+  color: #dc3545;
+}
+
+.stat-card.red span {
+  color: #f5c2c7;
+}
+
+.stat-card.red:hover {
+  box-shadow: 0 16px 38px rgba(220, 53, 69, 0.6);
+}

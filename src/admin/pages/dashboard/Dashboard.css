@@ -1,0 +1,180 @@
+.dashboard-root {
+  min-height: 100vh;
+  padding: 32px;
+  background:
+    radial-gradient(circle at top, #1b1f2a 0%, #0f172a 60%, #020617 100%);
+  color: #e5e7eb;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 28px;
+  margin-bottom: 36px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+}
+
+.dashboard-header h2 {
+  margin: 0;
+  font-weight: 600;
+}
+
+.dashboard-header span {
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.bell {
+  position: relative;
+  font-size: 26px;
+  cursor: pointer;
+  animation: softBlink 1.4s infinite;
+}
+
+.bell-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ef4444;
+  color: white;
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 50%;
+  font-weight: bold;
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 28px;
+  margin-bottom: 40px;
+}
+
+/* ================= LOW STOCK CARD (FIXED) ================= */
+
+.low-stock-hero {
+  /*  SAME SIZE AS STAT CARD */
+  min-height: 130px;
+  padding: 22px 24px;
+  border-radius: 18px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  /*  SAME SIDE BORDER */
+  border-left: 6px solid #dc3545;
+
+  /*  PREMIUM DARK RED GRADIENT */
+  background: linear-gradient(
+    135deg,
+    rgba(220, 53, 69, 0.18),
+    rgba(31, 41, 55, 1)
+  );
+
+  transition: all 0.35s ease;
+  cursor: pointer;
+}
+
+/*  SAME HOVER EFFECT AS STAT CARD */
+.low-stock-hero:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 38px rgba(220, 53, 69, 0.65);
+}
+
+/* TEXT TUNING */
+.low-stock-hero h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: #f1aeb5;
+}
+
+.low-stock-hero h1 {
+  font-size: 34px;
+  margin: 6px 0;
+  color: #ffffff;
+}
+
+.low-stock-hero span {
+  font-size: 12px;
+  color: #f5c2c7;
+}
+
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+  gap: 28px;
+}
+
+.chart-card {
+  padding: 26px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+
+.fake-chart {
+  margin-top: 16px;
+  font-size: 22px;
+  letter-spacing: 6px;
+  color: #60a5fa;
+}
+
+.low-stock-list-card {
+  margin-top: 40px;
+  padding: 26px;
+  border-radius: 22px;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+}
+
+.low-stock-list-card h4 {
+  margin-bottom: 16px;
+}
+
+.low-stock-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.04);
+  transition: background 0.2s ease;
+}
+
+.low-stock-row:hover {
+  background: rgba(255,255,255,0.1);
+}
+
+.muted {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.danger-badge {
+  background: #ef4444;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 999px;
+}
+
+.low-stock-view {
+  margin-top: 12px;
+  border: 1px solid #0b5ed7;
+  background: rgba(255,255,255,0.02);
+  color: #93c5fd;
+  padding: 6px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+}
