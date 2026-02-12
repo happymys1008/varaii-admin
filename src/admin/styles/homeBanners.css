@@ -1,0 +1,194 @@
+/* ==============================
+   HOME BANNERS – ADMIN STYLING
+============================== */
+
+.hb-container {
+  padding: 25px;
+}
+
+.hb-title {
+  margin-bottom: 20px;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* ==============================
+   Upload Card
+============================== */
+
+.hb-card {
+  background: #ffffff;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  margin-bottom: 28px;
+}
+
+/* ===== Form Grid Layout ===== */
+
+.hb-form-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1.2fr 0.5fr auto;
+  gap: 18px;
+  align-items: end;
+}
+
+.hb-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.hb-field label {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+  color: #374151;
+}
+
+.hb-field input {
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.hb-field input:focus {
+  border-color: #2563eb;
+  outline: none;
+}
+
+.hb-field.small {
+  max-width: 100px;
+}
+
+.hb-button-wrap {
+  display: flex;
+  align-items: end;
+}
+
+.hb-button-wrap button {
+  background: #2563eb;
+  color: white;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.hb-button-wrap button:hover {
+  background: #1e40af;
+}
+
+/* ==============================
+   Table Section
+============================== */
+
+.hb-table-wrapper {
+  background: white;
+  padding: 22px;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+}
+
+.hb-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.hb-table th,
+.hb-table td {
+  padding: 14px;
+  text-align: left;
+}
+
+.hb-table thead {
+  background: #f3f4f6;
+  font-weight: 600;
+}
+
+.hb-table tbody tr {
+  border-top: 1px solid #e5e7eb;
+}
+
+.hb-preview {
+  width: 190px;
+  border-radius: 8px;
+}
+
+/* ==============================
+   Toggle Switch
+============================== */
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 42px;
+  height: 22px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 22px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+
+.switch input:checked + .slider {
+  background-color: #22c55e;
+}
+
+.switch input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+/* ==============================
+   Delete Button
+============================== */
+
+.hb-delete-btn {
+  background: #ef4444;
+  color: white;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.hb-delete-btn:hover {
+  background: #b91c1c;
+}
+
+/* ==============================
+   Responsive
+============================== */
+
+@media (max-width: 900px) {
+  .hb-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hb-button-wrap {
+    justify-content: flex-start;
+  }
+}

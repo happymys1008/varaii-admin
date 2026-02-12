@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../../../core/api/api";
+import "../../styles/homeBanners.css";
 
 export default function HomeBanners() {
   const [banners, setBanners] = useState([]);
@@ -8,7 +9,7 @@ export default function HomeBanners() {
   const [order, setOrder] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  /* ================= LOAD BANNERS ================= */
+  /* ================= LOAD ================= */
   useEffect(() => {
     loadBanners();
   }, []);
@@ -18,7 +19,7 @@ export default function HomeBanners() {
     setBanners(res.data || []);
   };
 
-  /* ================= ADD BANNER ================= */
+  /* ================= ADD ================= */
   const addBanner = async () => {
     if (!file) {
       alert("Image required");
@@ -40,106 +41,114 @@ export default function HomeBanners() {
 
       await loadBanners();
     } catch (err) {
-      console.error(err);
       alert("Upload failed");
     } finally {
       setLoading(false);
     }
   };
 
-  /* ================= TOGGLE ACTIVE ================= */
   const toggleActive = async (id) => {
-    try {
-      await api.patch(`/admin/home-banners/${id}/toggle`);
-      loadBanners();
-    } catch (err) {
-      alert("Failed to update status");
-    }
+    await api.patch(`/admin/home-banners/${id}/toggle`);
+    loadBanners();
   };
 
-  /* ================= DELETE BANNER ================= */
   const deleteBanner = async (id) => {
     if (!window.confirm("Delete this banner permanently?")) return;
-
-    try {
-      await api.delete(`/home-banners/${id}`);
-      loadBanners();
-    } catch (err) {
-      alert("Delete failed");
-    }
+    await api.delete(`/home-banners/${id}`);
+    loadBanners();
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <h2>🖼️ Home Banners</h2>
+    <div className="hb-container">
+      <h2 className="hb-title">🖼️ Home Banners</h2>
 
-      <div className="card">
-        <input
-          type="file"
-          accept="image/*"
-          onChange={(e) => setFile(e.target.files[0])}
-        />
+      {/* Upload Section */}
+      <div className="hb-card">
+        <div className="hb-form-grid">
+          <div className="hb-field">
+            <label>Banner Image</label>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => setFile(e.target.files[0])}
+            />
+          </div>
 
-        <input
-          placeholder="Title / Link (optional)"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+          <div className="hb-field">
+            <label>Title / Link (optional)</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
 
-        <input
-          type="number"
-          value={order}
-          onChange={(e) => setOrder(Number(e.target.value))}
-        />
+          <div className="hb-field small">
+            <label>Order</label>
+            <input
+              type="number"
+              value={order}
+              onChange={(e) => setOrder(Number(e.target.value))}
+            />
+          </div>
 
-        <button onClick={addBanner} disabled={loading}>
-          {loading ? "Uploading..." : "➕ Add Banner"}
-        </button>
+          <div className="hb-button-wrap">
+            <button onClick={addBanner} disabled={loading}>
+              {loading ? "Uploading..." : "➕ Add Banner"}
+            </button>
+          </div>
+        </div>
       </div>
 
-      <table className="table" style={{ marginTop: 20 }}>
-        <thead>
-          <tr>
-            <th>Order</th>
-            <th>Preview</th>
-            <th>Active</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {banners.map((b) => (
-            <tr key={b._id}>
-              <td>{b.order}</td>
-
-              <td>
-                <img
-                  src={b.imageUrl}
-                  alt=""
-                  style={{ width: 160, borderRadius: 6 }}
-                />
-              </td>
-
-              <td>
-                <input
-                  type="checkbox"
-                  checked={b.active}
-                  onChange={() => toggleActive(b._id)}
-                />
-              </td>
-
-              <td>
-                <button
-                  onClick={() => deleteBanner(b._id)}
-                  style={{ color: "red" }}
-                >
-                  🗑 Remove
-                </button>
-              </td>
+      {/* Table */}
+      <div className="hb-table-wrapper">
+        <table className="hb-table">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Preview</th>
+              <th>Status</th>
+              <th>Action</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody>
+            {banners.map((b) => (
+              <tr key={b._id}>
+                <td>{b.order}</td>
+
+                <td>
+                  <img
+                    src={b.imageUrl}
+                    alt=""
+                    className="hb-preview"
+                  />
+                </td>
+
+                <td>
+                  <label className="switch">
+                    <input
+                      type="checkbox"
+                      checked={b.active}
+                      onChange={() => toggleActive(b._id)}
+                    />
+                    <span className="slider"></span>
+                  </label>
+                </td>
+
+                <td>
+                  <button
+                    className="hb-delete-btn"
+                    onClick={() => deleteBanner(b._id)}
+                  >
+                    🗑 Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

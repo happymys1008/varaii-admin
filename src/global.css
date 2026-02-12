@@ -54,8 +54,7 @@ button {
 
 /* ---------- FORM ELEMENTS ---------- */
 input,
-select,
-textarea {
+select,textarea {
   width: 100%;
   font-family: inherit;
   font-size: var(--font-size-sm);
