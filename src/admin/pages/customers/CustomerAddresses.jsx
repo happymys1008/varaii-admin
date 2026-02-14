@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { customerService } from "../../services/customerService";
+import { addressService } from "../../services/addressService";
 
 export default function CustomerAddresses({ customerId }) {
   const [addresses, setAddresses] = useState([]);
@@ -11,8 +11,10 @@ export default function CustomerAddresses({ customerId }) {
     const load = async () => {
       try {
         setLoading(true);
+
         const data =
-          await customerService.getCustomerAddresses(customerId);
+          await addressService.getByCustomer(customerId);
+
         setAddresses(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load addresses", err);
@@ -37,11 +39,12 @@ export default function CustomerAddresses({ customerId }) {
 
       {addresses.map(addr => (
         <div
-          key={addr._id}
+          key={addr.id}
           style={{
             border: "1px solid #ccc",
             margin: 8,
-            padding: 8
+            padding: 8,
+            borderRadius: 6
           }}
         >
           <p>
@@ -62,7 +65,9 @@ export default function CustomerAddresses({ customerId }) {
           </p>
 
           {addr.isDefault && (
-            <p style={{ color: "blue" }}>(Default)</p>
+            <p style={{ color: "blue", fontWeight: "bold" }}>
+              (Default Address)
+            </p>
           )}
         </div>
       ))}

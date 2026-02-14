@@ -3,18 +3,15 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { formatOrderDate } from "../../../utils/common/dateFormat";
 
 export default function Orders({
-  orders,
-  updateOrderStatus,
-  downloadInvoice
+  orders = [],
+  updateOrderStatus
 }) {
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const statusFilter = params.get("status");
 
-  const bills = JSON.parse(localStorage.getItem("bills")) || [];
-
-  const activeOrders = orders
+  const filteredOrders = orders
     .filter(o => {
       if (!statusFilter) return o.status !== "CANCELLED";
       return o.status === statusFilter;
@@ -33,6 +30,7 @@ export default function Orders({
         gap: 20
       }}
     >
+      {/* FILTERS */}
       <div style={{ gridColumn: "1 / -1", display: "flex", gap: 10, flexWrap: "wrap" }}>
         <FilterChip label="All" active={!statusFilter} onClick={() => navigate("/admin/orders")} />
         <FilterChip label="Created" active={statusFilter === "CREATED"} onClick={() => navigate("/admin/orders?status=CREATED")} />
@@ -43,10 +41,9 @@ export default function Orders({
         <FilterChip label="Cancelled" active={statusFilter === "CANCELLED"} danger onClick={() => navigate("/admin/orders?status=CANCELLED")} />
       </div>
 
-      {activeOrders.map(o => {
-        const hasBill = !!o.invoiceNo;
-        const bill = bills.find(b => b.invoiceNo === o.invoiceNo);
-        const orderId = o._id || o.id;
+      {/* ACTIVE ORDERS */}
+      {filteredOrders.map(o => {
+        const orderId = o._id;
 
         return (
           <div
@@ -69,117 +66,82 @@ export default function Orders({
             <p><b>Name:</b> {o.customerName}</p>
             <p><b>Mobile:</b> {o.customerMobile}</p>
             <p><b>Status:</b> {o.status}</p>
-            <p><b>Payment:</b> {o.paymentMode}</p>
-
-            <p>
-              <b>Total:</b> ₹{bill?.total ?? o.grandTotal ?? o.total ?? 0}
-            </p>
-
-            {o.status === "CREATED" && !hasBill && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  navigate(`/admin/billing?orderId=${orderId}`);
-                }}
-              >
-                Create Bill
-              </button>
-            )}
-
-            {hasBill && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!bill) return alert("Invoice not found");
-                  downloadInvoice(bill);
-                }}
-              >
-                Download Invoice
-              </button>
-            )}
-
-            {o.status === "CREATED" && !hasBill && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (!window.confirm("Cancel this order?")) return;
-                  updateOrderStatus(orderId, "CANCELLED");
-                }}
-              >
-                Cancel Order
-              </button>
-            )}
+            <p><b>Payment:</b> {o.paymentStatus}</p>
+            <p><b>Total:</b> ₹{o.grandTotal}</p>
 
             <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
               {o.status === "CREATED" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateOrderStatus(orderId, "PAID");
-                  }}
-                >
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  updateOrderStatus(orderId, "PAID");
+                }}>
                   Mark Paid
                 </button>
               )}
+
               {o.status === "PAID" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateOrderStatus(orderId, "PACKED");
-                  }}
-                >
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  updateOrderStatus(orderId, "PACKED");
+                }}>
                   Mark Packed
                 </button>
               )}
+
               {o.status === "PACKED" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateOrderStatus(orderId, "SHIPPED");
-                  }}
-                >
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  updateOrderStatus(orderId, "SHIPPED");
+                }}>
                   Mark Shipped
                 </button>
               )}
+
               {o.status === "SHIPPED" && (
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    updateOrderStatus(orderId, "DELIVERED");
-                  }}
-                >
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  updateOrderStatus(orderId, "DELIVERED");
+                }}>
                   Mark Delivered
+                </button>
+              )}
+
+              {o.status !== "CANCELLED" && (
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  if (!window.confirm("Cancel this order?")) return;
+                  updateOrderStatus(orderId, "CANCELLED");
+                }}>
+                  Cancel
                 </button>
               )}
             </div>
 
             <ul>
               {o.items?.map((it, i) => (
-                <li key={i}>{it.name} × {it.qty}</li>
+                <li key={i}>{it.name} × {it.quantity}</li>
               ))}
             </ul>
           </div>
         );
       })}
 
-      {cancelledOrders.map(o => {
-        const orderId = o._id || o.id;
-        return (
-          <div
-            key={orderId}
-            style={{
-              border: "1px solid #f5c2c7",
-              padding: 16,
-              borderRadius: 10,
-              background: "#fff5f5"
-            }}
-          >
-            <b>Order {o.orderNo}</b>
-            <p>{o.customerName}</p>
-            <p style={{ color: "red" }}>CANCELLED</p>
-          </div>
-        );
-      })}
+      {/* CANCELLED */}
+      {cancelledOrders.map(o => (
+        <div
+          key={o._id}
+          style={{
+            border: "1px solid #f5c2c7",
+            padding: 16,
+            borderRadius: 10,
+            background: "#fff5f5"
+          }}
+        >
+          <b>Order {o.orderNo}</b>
+          <p>{o.customerName}</p>
+          <p style={{ color: "red" }}>CANCELLED</p>
+        </div>
+      ))}
     </div>
   );
 }

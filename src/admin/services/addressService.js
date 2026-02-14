@@ -1,67 +1,43 @@
-const ADDRESS_KEY = "customer_addresses";
+import api from "../../core/api/api";
 
 export const addressService = {
+
   /* ================= ADMIN: GET BY CUSTOMER ================= */
   async getByCustomer(customerId) {
-    const addresses =
-      JSON.parse(localStorage.getItem(ADDRESS_KEY)) || [];
-
-    return addresses.filter(
-      a => String(a.customerId) === String(customerId)
-    );
+    try {
+      const res = await api.get(`/customers/${customerId}`);
+      return res.data.addresses || [];
+    } catch (err) {
+      console.error("Failed to fetch customer addresses", err);
+      return [];
+    }
   },
 
-  /* ================= ADMIN: TOGGLE ACTIVE ================= */
-  async toggleActive(addressId) {
-    let addresses =
-      JSON.parse(localStorage.getItem(ADDRESS_KEY)) || [];
+  /* ================= ADMIN: SET DEFAULT ================= */
+  async setDefault(customerId, addressId) {
+    try {
+      await api.put(`/customers/${customerId}/addresses/${addressId}`, {
+        isDefault: true
+      });
 
-    addresses = addresses.map(a =>
-      a.id === addressId
-        ? {
-            ...a,
-            isActive: a.isActive === false ? true : false,
-            updatedAt: new Date().toISOString()
-          }
-        : a
-    );
-
-    localStorage.setItem(
-      ADDRESS_KEY,
-      JSON.stringify(addresses)
-    );
-
-    return addresses;
+      const res = await api.get(`/customers/${customerId}`);
+      return res.data.addresses || [];
+    } catch (err) {
+      console.error("Failed to set default address", err);
+      return [];
+    }
   },
 
-  /* ================= ADMIN: SET DEFAULT (PER CUSTOMER) ================= */
-  async setDefault(addressId) {
-    let addresses =
-      JSON.parse(localStorage.getItem(ADDRESS_KEY)) || [];
+  /* ================= ADMIN: DELETE ADDRESS ================= */
+  async remove(customerId, addressId) {
+    try {
+      await api.delete(`/customers/${customerId}/addresses/${addressId}`);
 
-    const target = addresses.find(a => a.id === addressId);
-    if (!target) return addresses;
-
-    const customerId = target.customerId;
-
-    addresses = addresses.map(a => {
-      if (String(a.customerId) !== String(customerId)) return a;
-
-      return {
-        ...a,
-        isDefault: a.id === addressId,
-        updatedAt:
-          a.id === addressId ? new Date().toISOString() : a.updatedAt
-      };
-    });
-
-    localStorage.setItem(
-      ADDRESS_KEY,
-      JSON.stringify(addresses)
-    );
-
-    return addresses.filter(
-      a => String(a.customerId) === String(customerId)
-    );
+      const res = await api.get(`/customers/${customerId}`);
+      return res.data.addresses || [];
+    } catch (err) {
+      console.error("Failed to delete address", err);
+      return [];
+    }
   }
 };

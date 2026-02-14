@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import api from "../../core/api/api";
+
 
 import {
   listOrders,
   updateOrderStatus
 } from "../services/orderService";
 
-// ✅ ADD THIS IMPORT
 import { AdminCatalogProvider } from "../context/AdminCatalogContext";
 
 // admin components
@@ -25,27 +26,23 @@ import ProfileSchemaSettings from "./settings/ProfileSchemaSettings";
 import AccountSidebarSettings from "./settings/AccountSidebarSettings";
 
 import AdminOrderDetail from "./customers/AdminOrderDetail";
-// Home CMS
+
 import HomeSections from "./home/HomeSections";
 import HomeBanners from "./home/HomeBanners";
 
-// Catalog
 import Categories from "./catalog/Categories";
 import Brands from "./catalog/Brands";
 import ProductsRoutes from "./products/ProductsRoutes";
 
-// Inventory
 import InventoryCategory from "./inventory/InventoryCategory";
 
 import PincodeDashboard from "./delivery/PincodeDashboard";
 import PaymentSettings from "./settings/PaymentSettings";
 
-// Orders
 import Orders from "./orders/Orders";
 import Billing from "./orders/Billing";
 
 import { downloadInvoice } from "../../utils/billing/invoice";
-
 
 import ProductAttributes from "./catalog/ProductAttributes";
 import ProductView from "./catalog/ProductView";
@@ -54,10 +51,13 @@ import ProductVariants from "./products/ProductVariants";
 import ReviewsDashboard from "./reviews/ReviewsDashboard";
 
 export default function Admin() {
-  /* ================= ADMIN LOGIN ================= */
-  const [adminLogged, setAdminLogged] = useState(
-    localStorage.getItem("adminLogged") === "true"
-  );
+
+  const navigate = useNavigate();
+
+  /* ================= AUTH STATE ================= */
+  const [adminLogged, setAdminLogged] = useState(false);
+  const [loadingAuth, setLoadingAuth] = useState(true);
+
   const [adminId, setAdminId] = useState("");
   const [adminPass, setAdminPass] = useState("");
   const [loginError, setLoginError] = useState("");
@@ -65,13 +65,39 @@ export default function Admin() {
   /* ================= DATA ================= */
   const [orders, setOrders] = useState([]);
 
-  /* ================= LOAD ORDERS ================= */
+  /* ================= CHECK ADMIN AUTH ================= */
   useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await api.get("/admin/me");
+        if (res.data?.role === "admin") {
+          setAdminLogged(true);
+        } else {
+          setAdminLogged(false);
+        }
+      } catch {
+        setAdminLogged(false);
+      } finally {
+        setLoadingAuth(false);
+      }
+    };
+
+    checkAdmin();
+  }, []);
+
+  /* ================= LOAD ORDERS (ONLY IF ADMIN) ================= */
+  useEffect(() => {
+    if (!adminLogged) return;
+
     let isActive = true;
 
     const loadOrders = async () => {
-      const list = await listOrders();
-      if (isActive) setOrders(list || []);
+      try {
+        const list = await listOrders();
+        if (isActive) setOrders(list || []);
+      } catch (err) {
+        console.error("Failed loading orders", err.message);
+      }
     };
 
     loadOrders();
@@ -81,7 +107,7 @@ export default function Admin() {
       isActive = false;
       clearInterval(interval);
     };
-  }, []);
+  }, [adminLogged]);
 
   const handleUpdateOrderStatus = async (orderId, status) => {
     try {
@@ -93,6 +119,11 @@ export default function Admin() {
     }
   };
 
+  /* ================= SHOW LOADING ================= */
+  if (loadingAuth) {
+    return <div style={{ padding: 40 }}>Checking admin authentication...</div>;
+  }
+
   /* ================= LOGIN SCREEN ================= */
   if (!adminLogged) {
     return (
@@ -100,7 +131,7 @@ export default function Admin() {
         <h2>Admin Login – HAPPY IVAN</h2>
 
         <input
-          placeholder="Admin ID"
+          placeholder="Admin Email / Mobile"
           value={adminId}
           onChange={e => setAdminId(e.target.value)}
         /><br /><br />
@@ -115,12 +146,30 @@ export default function Admin() {
         {loginError && <p style={{ color: "red" }}>{loginError}</p>}
 
         <button
-          onClick={() => {
-            if (adminId === "admin" && adminPass === "Happy@9982649982") {
-              localStorage.setItem("adminLogged", "true");
-              setAdminLogged(true);
-            } else {
-              setLoginError("Wrong Admin ID or Password");
+          onClick={async () => {
+            try {
+await api.post("/admin/login", {
+  mobile: adminId,
+  password: adminPass
+});
+
+
+
+              const me = await api.get("/admin/me");
+if (me.data?.role === "admin") {
+  setAdminLogged(true);
+  navigate("/admin/dashboard");
+}
+
+
+
+
+ else {
+                setLoginError("Not an admin account");
+              }
+
+            } catch {
+              setLoginError("Wrong Admin Credentials");
             }
           }}
         >
@@ -132,7 +181,6 @@ export default function Admin() {
 
   /* ================= ADMIN PANEL ================= */
   return (
-    // 🔥🔥 WRAP ADMIN WITH PROVIDER 🔥🔥
     <AdminCatalogProvider>
       <div>
         <AdminHeader />
@@ -177,40 +225,29 @@ export default function Admin() {
 
               <Route path="customers" element={<CustomersDashboard />} />
               <Route path="customers/:id" element={<CustomerDetails />} />
-              
 
-              <Route
-                path="orders/:orderId"
-                element={<AdminOrderDetail />}
-              />
+              <Route path="orders/:orderId" element={<AdminOrderDetail />} />
 
-              <Route
-                path="settings/profile-schema"
-                element={<ProfileSchemaSettings />}
-              />
-
-              <Route
-                path="settings/account-sidebar"
-                element={<AccountSidebarSettings />}
-              />
+              <Route path="settings/profile-schema" element={<ProfileSchemaSettings />} />
+              <Route path="settings/account-sidebar" element={<AccountSidebarSettings />} />
 
               <Route path="products/:id" element={<ProductView />} />
-              <Route
-                path="products/:id/variants"
-                element={<ProductVariants />}
-              />
+              <Route path="products/:id/variants" element={<ProductVariants />} />
             </Routes>
 
             <br />
 
-            <button
-              onClick={() => {
-                localStorage.removeItem("adminLogged");
-                window.location.reload();
-              }}
-            >
+<button
+  onClick={async () => {
+    await api.post("/admin/logout");
+    setAdminLogged(false);
+    navigate("/admin");
+  }}
+>
+
               Logout
             </button>
+
           </div>
         </div>
       </div>
