@@ -5,30 +5,47 @@ import { getProfileSchema } from "../../../utils/profileSchema";
 export default function CustomerProfile({ customerId }) {
   const [customer, setCustomer] = useState(null);
   const [schema, setSchema] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  // 🔐 Load schema (admin controlled)
+  /* 🔐 LOAD SCHEMA (ADMIN CONTROLLED) */
   useEffect(() => {
     setSchema(getProfileSchema());
   }, []);
 
-  // 🔥 Load customer from backend (single source of truth)
+  /* 🔥 LOAD CUSTOMER (SINGLE SOURCE OF TRUTH) */
   useEffect(() => {
     if (!customerId) return;
 
     async function load() {
       try {
-        const data = await customerService.getCustomerById(customerId);
-        setCustomer(data);
+        setLoading(true);
+        setError("");
+
+        const data =
+          await customerService.getCustomerById(customerId);
+
+        setCustomer(data?.customer || data?.user || data);
       } catch (err) {
         console.error("Failed to load customer profile", err);
+        setError(err.message || "Failed to load profile");
         setCustomer(null);
+      } finally {
+        setLoading(false);
       }
     }
 
     load();
   }, [customerId]);
 
-  if (!customer) return <p>Loading profile…</p>;
+  /* ===== STATES ===== */
+  if (loading) return <p>Loading profile…</p>;
+
+  if (error)
+    return <p style={{ color: "red" }}>{error}</p>;
+
+  if (!customer)
+    return <p>No customer profile found</p>;
 
   return (
     <div>
@@ -44,30 +61,44 @@ export default function CustomerProfile({ customerId }) {
 
       <hr />
 
-      {/* 👤 BASIC INFO (FROM BACKEND) */}
+      {/* 👤 BASIC INFO */}
       {schema.firstName && (
-        <p><b>First Name:</b> {customer.firstName || "-"}</p>
+        <p>
+          <b>First Name:</b>{" "}
+          {customer.name?.split(" ")[0] || "-"}
+        </p>
       )}
 
       {schema.lastName && (
-        <p><b>Last Name:</b> {customer.lastName || "-"}</p>
+        <p>
+          <b>Last Name:</b>{" "}
+          {customer.name?.split(" ").slice(1).join(" ") || "-"}
+        </p>
       )}
 
       {schema.email && (
-        <p><b>Email:</b> {customer.email || "-"}</p>
+        <p>
+          <b>Email:</b> {customer.email || "-"}
+        </p>
       )}
 
-      {schema.phone && (
-        <p><b>Phone:</b> {customer.phone || "-"}</p>
+      {schema.secondaryPhone && (
+        <p>
+          <b>Phone:</b> {customer.mobile || "-"}
+        </p>
       )}
 
-      {/* 🔮 FUTURE FIELDS (SAFE) */}
+      {/* 🔮 FUTURE FIELDS */}
       {schema.dob && (
-        <p><b>DOB:</b> {customer.dob || "-"}</p>
+        <p>
+          <b>DOB:</b> {customer.dob || "-"}
+        </p>
       )}
 
       {schema.anniversary && (
-        <p><b>Anniversary:</b> {customer.anniversary || "-"}</p>
+        <p>
+          <b>Anniversary:</b> {customer.anniversary || "-"}
+        </p>
       )}
 
       <hr />
@@ -76,24 +107,32 @@ export default function CustomerProfile({ customerId }) {
       <button
         onClick={async () => {
           try {
-            const updated = await customerService.updateCustomer(
-              customerId,
-              { isActive: !customer.isActive }
+            const updated =
+              await customerService.updateCustomer(
+                customerId,
+                { isActive: !customer.isActive }
+              );
+
+            setCustomer(
+              updated?.customer || updated?.user || updated
             );
-            setCustomer(updated);
-          } catch (err) {
+          } catch {
             alert("Failed to update customer status");
           }
         }}
         style={{
-          background: customer.isActive ? "#dc3545" : "#198754",
+          background: customer.isActive
+            ? "#dc3545"
+            : "#198754",
           color: "white",
           padding: "6px 12px",
           border: "none",
           borderRadius: 4
         }}
       >
-        {customer.isActive ? "Block Customer" : "Unblock Customer"}
+        {customer.isActive
+          ? "Block Customer"
+          : "Unblock Customer"}
       </button>
     </div>
   );

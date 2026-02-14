@@ -97,7 +97,7 @@ export default function CustomersDashboard() {
           {customers.map(c => (
             <tr key={c._id}>
               <td>{c.name || "-"}</td>
-              <td>{c.phone || "-"}</td>
+              <td>{c.mobile || c.phone || "-"}</td>
               <td>{c.city || "-"}</td>
               <td>{c.state || "-"}</td>
               <td>{c.isActive ? "Active" : "Blocked"}</td>
