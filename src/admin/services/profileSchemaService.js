@@ -1,44 +1,30 @@
-const KEY = "customer_profile_schema";
+import api from "../../core/api/api";
 
-const defaultSchema = [
-  {
-    key: "altPhone",
-    label: "Alternate Mobile Number",
-    type: "text",
-    enabled: false
-  },
-  {
-    key: "dob",
-    label: "Date of Birth",
-    type: "date",
-    enabled: false
-  },
-  {
-    key: "anniversary",
-    label: "Anniversary Date",
-    type: "date",
-    enabled: false
-  }
-];
+/* ===============================
+   PROFILE SCHEMA SERVICE (API)
+=============================== */
 
 export const profileSchemaService = {
-  getAll() {
-    const data = JSON.parse(localStorage.getItem(KEY));
-    if (!data) {
-      localStorage.setItem(KEY, JSON.stringify(defaultSchema));
-      return defaultSchema;
-    }
-    return data;
+  /* 🔹 GET ALL */
+  async getAll() {
+    const res = await api.get("/profile-schema");
+    return res.data || {};
   },
 
-  toggleField(fieldKey) {
-    const schema = this.getAll().map(f =>
-      f.key === fieldKey
-        ? { ...f, enabled: !f.enabled }
-        : f
-    );
+  /* 🔹 TOGGLE FIELD */
+  async toggleField(fieldKey) {
+    const current = await this.getAll();
 
-    localStorage.setItem(KEY, JSON.stringify(schema));
-    return schema;
-  }
+    const updated = {
+      ...current,
+      [fieldKey]: {
+        ...current[fieldKey],
+        enabled: !current[fieldKey]?.enabled,
+      },
+    };
+
+    await api.put("/profile-schema", updated);
+
+    return updated;
+  },
 };

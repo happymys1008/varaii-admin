@@ -1,26 +1,27 @@
 import { useEffect, useState } from "react";
-import {
-  getPurchaseRegister,
-  deletePurchase,
-  getItemsByPurchase
-} from "../../../utils/billing/purchaseUtils";
+import api from "../../../core/api/api";
 
 export default function PurchaseRegister() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
 
   /* ================= LOAD ================= */
-  const loadPurchases = () => {
-    const data = getPurchaseRegister();
-    setPurchases(data);
+  const loadData = async () => {
+    try {
+      const [pRes, sRes] = await Promise.all([
+        api.get("/purchases"),
+        api.get("/suppliers"),
+      ]);
+
+      setPurchases(pRes.data || []);
+      setSuppliers(sRes.data || []);
+    } catch (err) {
+      console.error("Failed loading purchase register", err);
+    }
   };
 
   useEffect(() => {
-    loadPurchases();
-
-    setSuppliers(
-      JSON.parse(localStorage.getItem("suppliers")) || []
-    );
+    loadData();
   }, []);
 
   /* ================= HELPERS ================= */
@@ -28,19 +29,31 @@ export default function PurchaseRegister() {
   // Supplier ID → Name
   const getSupplierName = (supplierId) => {
     const s = suppliers.find(
-      x => String(x.id) === String(supplierId)
+      (x) => String(x._id || x.id) === String(supplierId)
     );
     return s?.name || "Unknown Supplier";
   };
 
-  // Purchase Total (from purchase_items)
-  const getPurchaseTotal = (purchaseId) => {
-    const items = getItemsByPurchase(purchaseId);
-
-    return items.reduce(
-      (sum, i) => sum + i.qty * i.costPrice,
+  const getPurchaseTotal = (purchase) => {
+    return (purchase.items || []).reduce(
+      (sum, i) => sum + (i.qty || 0) * (i.costPrice || 0),
       0
     );
+  };
+
+  /* ================= DELETE ================= */
+  const handleDelete = async (id) => {
+    const ok = window.confirm(
+      "Delete this purchase?\nStock will be reversed."
+    );
+    if (!ok) return;
+
+    try {
+      await api.delete(`/purchases/${id}`);
+      loadData();
+    } catch (err) {
+      alert("Delete failed");
+    }
   };
 
   return (
@@ -55,7 +68,7 @@ export default function PurchaseRegister() {
           style={{
             width: "100%",
             borderCollapse: "collapse",
-            background: "#fff"
+            background: "#fff",
           }}
         >
           <thead>
@@ -71,13 +84,11 @@ export default function PurchaseRegister() {
 
           <tbody>
             {purchases
-              .filter(p => p.status === "ACTIVE")
-              .map(p => (
+              .filter((p) => p.status === "ACTIVE")
+              .map((p) => (
                 <tr
-                  key={p.id}
-                  style={{
-                    borderBottom: "1px solid #e5e7eb"
-                  }}
+                  key={p._id || p.id}
+                  style={{ borderBottom: "1px solid #e5e7eb" }}
                 >
                   <td style={td}>
                     {p.invoiceDate
@@ -92,7 +103,7 @@ export default function PurchaseRegister() {
                   </td>
 
                   <td style={{ ...td, textAlign: "right" }}>
-                    ₹{getPurchaseTotal(p.id)}
+                    ₹{getPurchaseTotal(p)}
                   </td>
 
                   <td style={{ ...td, textAlign: "center" }}>
@@ -102,15 +113,9 @@ export default function PurchaseRegister() {
                   <td style={{ ...td, textAlign: "center" }}>
                     <button
                       style={deleteBtn}
-                      onClick={() => {
-                        const ok = window.confirm(
-                          "Delete this purchase?\nStock will be reversed."
-                        );
-                        if (!ok) return;
-
-                        deletePurchase(p.id);
-                        loadPurchases();
-                      }}
+                      onClick={() =>
+                        handleDelete(p._id || p.id)
+                      }
                     >
                       Delete
                     </button>
@@ -131,12 +136,12 @@ const th = {
   fontSize: 14,
   fontWeight: 600,
   textAlign: "left",
-  borderBottom: "2px solid #d1d5db"
+  borderBottom: "2px solid #d1d5db",
 };
 
 const td = {
   padding: "10px",
-  fontSize: 14
+  fontSize: 14,
 };
 
 const deleteBtn = {
@@ -145,5 +150,5 @@ const deleteBtn = {
   border: "none",
   padding: "6px 12px",
   borderRadius: 4,
-  cursor: "pointer"
+  cursor: "pointer",
 };

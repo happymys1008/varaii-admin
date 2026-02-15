@@ -1,21 +1,13 @@
-import axios from "axios";
+import api from "../../core/api/api";
 
-const API_BASE =
-  process.env.NODE_ENV === "production"
-    ? process.env.REACT_APP_API_BASE_URL_PROD
-    : process.env.REACT_APP_API_BASE_URL;
+/* ===============================
+   CREATE PURCHASE (ADMIN)
+=============================== */
 
 export const createPurchaseApi = async (payload) => {
-  const token = localStorage.getItem("adminToken"); // 🔥 IMPORTANT
-
-  const res = await axios.post(
-    `${API_BASE}/api/purchases`,
-    payload,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`
-      }
-    }
+  const res = await api.post(
+    "/purchases",
+    payload
   );
 
   return res.data;

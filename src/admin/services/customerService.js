@@ -1,83 +1,41 @@
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+import api from "../../core/api/api";
 
 /* ===============================
    ADMIN CUSTOMER SERVICE
-   =============================== */
+=============================== */
 
 export const customerService = {
   getAllCustomers,
   getCustomerById,
   updateCustomer,
-  getCustomerAddresses
+  getCustomerAddresses,
 };
 
 /* 🔹 GET ALL CUSTOMERS (ADMIN) */
 async function getAllCustomers() {
-  const res = await fetch(
-    `${API_BASE}/api/users/admin/customers`,
-    {
-      credentials: "include"
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to load customers");
-  }
-
-  return res.json();
+  const res = await api.get("/users/admin/customers");
+  return res.data;
 }
 
 /* 🔹 GET SINGLE CUSTOMER (ADMIN) */
 async function getCustomerById(customerId) {
-  const res = await fetch(
-    `${API_BASE}/api/users/admin/customers/${customerId}`,
-    {
-      credentials: "include"
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error("Failed to load customer");
-  }
-
-  return res.json();
+  const res = await api.get(`/users/admin/customers/${customerId}`);
+  return res.data;
 }
 
 /* 🔹 UPDATE CUSTOMER (ADMIN) */
 async function updateCustomer(customerId, payload) {
-  const res = await fetch(
-    `${API_BASE}/api/users/admin/customers/${customerId}`,
-    {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      credentials: "include",
-      body: JSON.stringify(payload)
-    }
+  const res = await api.put(
+    `/users/admin/customers/${customerId}`,
+    payload
   );
-
-  if (!res.ok) {
-    throw new Error("Customer update failed");
-  }
-
-  return res.json();
+  return res.data;
 }
-
 
 /* 🔹 GET CUSTOMER ADDRESSES (ADMIN) */
 async function getCustomerAddresses(customerId) {
-  const res = await fetch(
-    `${API_BASE}/api/users/admin/customers/${customerId}/addresses`,
-    {
-      credentials: "include"
-    }
+  const res = await api.get(
+    `/users/admin/customers/${customerId}/addresses`
   );
-
-  if (!res.ok) {
-    throw new Error("Failed to load customer addresses");
-  }
-
-  return res.json();
+  return res.data;
 }
-
