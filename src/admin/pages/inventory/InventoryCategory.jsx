@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+import api from "../../../core/api/api";
 
-const API = process.env.REACT_APP_API_BASE_URL;
+
 
 export default function InventoryCategory() {
   const [categories, setCategories] = useState([]);
@@ -13,27 +13,59 @@ export default function InventoryCategory() {
 
   /* ================= LOAD DATA ================= */
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [catRes, prodRes, brandRes, invRes] = await Promise.all([
-          axios.get(`${API}/api/categories`),
-          axios.get(`${API}/api/products`),
-          axios.get(`${API}/api/brands`),
-          axios.get(`${API}/api/inventory`)
-        ]);
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const [catRes, prodRes, brandRes, invRes] = await Promise.all([
+        api.get("/categories"),
+        api.get("/products"),
+        api.get("/brands"),
+        api.get("/inventory")
+      ]);
 
-        setCategories(catRes.data || []);
-        setProducts(prodRes.data || []);
-        setBrands(brandRes.data || []);
-        setInventory(invRes.data || []);
-      } catch (err) {
-        console.error("Inventory load failed", err);
-      }
-    };
+      // ✅ SAFE PARSE ALL
 
-    fetchData();
-  }, []);
+      setCategories(
+        Array.isArray(catRes.data?.data)
+          ? catRes.data.data
+          : Array.isArray(catRes.data)
+          ? catRes.data
+          : []
+      );
+
+      setProducts(
+        Array.isArray(prodRes.data?.data)
+          ? prodRes.data.data
+          : Array.isArray(prodRes.data)
+          ? prodRes.data
+          : []
+      );
+
+      setBrands(
+        Array.isArray(brandRes.data?.data)
+          ? brandRes.data.data
+          : Array.isArray(brandRes.data)
+          ? brandRes.data
+          : []
+      );
+
+      setInventory(
+        Array.isArray(invRes.data?.data)
+          ? invRes.data.data
+          : Array.isArray(invRes.data)
+          ? invRes.data
+          : []
+      );
+
+    } catch (err) {
+      console.error("Inventory load failed", err);
+    }
+  };
+
+  fetchData();
+}, []);
+
+
 
   /* ================= AUTO SELECT CATEGORY ================= */
 
