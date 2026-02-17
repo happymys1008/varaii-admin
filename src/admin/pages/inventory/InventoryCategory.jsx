@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../core/api/api";
 
+import { listVariants } from "../../services/variantService";
+
 
 
 export default function InventoryCategory() {
@@ -8,6 +10,8 @@ export default function InventoryCategory() {
   const [products, setProducts] = useState([]);
   const [inventory, setInventory] = useState([]);
   const [brands, setBrands] = useState([]);
+
+const [variantsMap, setVariantsMap] = useState({});
 
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
 
@@ -22,6 +26,8 @@ useEffect(() => {
         api.get("/brands"),
         api.get("/inventory")
       ]);
+console.log("INVENTORY RAW:", invRes.data);
+
 
       // ✅ SAFE PARSE ALL
 
@@ -75,6 +81,36 @@ useEffect(() => {
     }
   }, [categories, selectedCategoryId]);
 
+
+useEffect(() => {
+  const loadVariants = async () => {
+    const map = {};
+
+    for (const product of products) {
+      if (product.allowVariants) {
+        try {
+          const variants = await listVariants(product._id);
+
+variants.forEach((v) => {
+  map[String(v._id)] = Object.values(v.attributes || {}).join(" / ");
+});
+
+
+        } catch (err) {
+          console.error("Variant load error", err);
+        }
+      }
+    }
+
+    setVariantsMap(map);
+  };
+
+  if (products.length) {
+    loadVariants();
+  }
+}, [products]);
+
+
   /* ================= BUILD ROWS ================= */
 
   const rows = useMemo(() => {
@@ -95,15 +131,21 @@ useEffect(() => {
 
         return {
           productName: product.name,
-          variantLabel: inv.variantId ? "Variant" : "—",
+variantLabel: inv.variantId
+  ? variantsMap[String(inv.variantId)] || "—"
+ : <span style={{ color: "#777" }}>Non-Variant</span>,
+
+
+
           brand: brand?.name || "-",
           trackingType: product.trackingType,
           qty: Number(inv.qty || 0),
-          imeis: inv.imeis || []
+          imeis: inv.imeis || [],
+serials: inv.serials || []
         };
       })
       .filter(Boolean);
-  }, [inventory, products, brands, selectedCategoryId]);
+  }, [inventory, products, brands, selectedCategoryId, variantsMap]);
 
   /* ================= UI ================= */
 
@@ -157,9 +199,12 @@ useEffect(() => {
                 <td align="center">{row.trackingType}</td>
                 <td align="center">{row.qty}</td>
                 <td>
-                  {row.trackingType === "QTY"
-                    ? "-"
-                    : row.imeis.join(", ")}
+{row.trackingType === "QTY"
+  ? "-"
+  : row.trackingType === "IMEI"
+    ? row.imeis.join(", ")
+    : row.serials?.join(", ") || "-"}
+
                 </td>
               </tr>
             ))}
