@@ -98,8 +98,18 @@ export default function CustomersDashboard() {
             <tr key={c._id}>
               <td>{c.name || "-"}</td>
               <td>{c.mobile || c.phone || "-"}</td>
-              <td>{c.city || "-"}</td>
-              <td>{c.state || "-"}</td>
+<td>
+  {c.addresses && c.addresses.length > 0
+    ? c.addresses[0].city || "-"
+    : "-"}
+</td>
+
+<td>
+  {c.addresses && c.addresses.length > 0
+    ? c.addresses[0].state || "-"
+    : "-"}
+</td>
+
               <td>{c.isActive ? "Active" : "Blocked"}</td>
               <td>
                 <button
