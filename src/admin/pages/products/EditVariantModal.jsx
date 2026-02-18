@@ -24,8 +24,6 @@ const [variantImages, setVariantImages] = useState(
 
 
 
-  const [imageInput, setImageInput] = useState("");
-
   const [hasInventory, setHasInventory] = useState(false);
 
 
