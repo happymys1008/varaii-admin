@@ -3,6 +3,8 @@ import { useCallback, useEffect, useState } from "react";
 
 import AddVariantModal from "./AddVariantModal";
 import EditVariantModal from "./EditVariantModal";
+import { updateVariant } from "../../services/variantService";
+
 
 // ✅ SERVICES (single source of truth)
 import { getProductById } from "../../services/productService";
@@ -80,6 +82,22 @@ export default function ProductVariants() {
       alert("❌ Failed to save variant");
     }
   };
+
+/* ================= UPDATE EXISTING VARIANT ================= */
+const handleUpdateVariant = async (updatedVariant) => {
+  try {
+    await updateVariant(updatedVariant._id, updatedVariant);
+
+    setShowEditModal(false);
+    setEditingVariant(null);
+
+    loadData(); // 🔄 reload fresh data
+  } catch (err) {
+    console.error("Update variant failed:", err);
+    alert("❌ Failed to update variant");
+  }
+};
+
 
 
   useEffect(() => {
@@ -218,7 +236,7 @@ export default function ProductVariants() {
             setShowEditModal(false);
             setEditingVariant(null);
           }}
-          onSave={loadData}
+          onSave={handleUpdateVariant}
         />
       )}
     </div>

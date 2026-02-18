@@ -27,7 +27,9 @@ export default function ProductBasicInfo({
 
 /* ================= DEFAULT VARIANT ================= */
 const defaultVariant = useMemo(() => {
-  if (!product?.variants?.length) return null;
+  if (!product?.variants || product.variants.length === 0)
+    return null;
+
   return (
     product.variants.find(v => v.isDefault) ||
     product.variants[0] ||
@@ -114,6 +116,11 @@ if (!form.allowVariants) {
 }
 
 // 🔥 VARIANT PRODUCT → price goes to VARIANT
+if (!defaultVariant?._id) {
+  alert("No variant found for this product");
+  return;
+}
+
 onSave({
   product: payload,
   variantPrice: {
@@ -122,6 +129,7 @@ onSave({
     sellingPrice: Number(form.sellingPrice)
   }
 });
+
 
 
 

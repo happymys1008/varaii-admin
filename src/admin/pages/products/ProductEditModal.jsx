@@ -46,7 +46,7 @@ useEffect(() => {
 
 
 
-  const isEdit = Boolean(form?.id);
+ const isEdit = Boolean(form?._id);
 
   const update = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -75,21 +75,6 @@ if (!form.childCategoryId) {
       return;
     }
 
-    /* DUPLICATE GUARD */
-    const nameKey = form.name.trim().toLowerCase();
-    const products =
-      JSON.parse(localStorage.getItem("products")) || [];
-
-    const duplicate = products.find(p =>
-      p.id !== form.id &&
-      p.name?.toLowerCase() === nameKey &&
-      String(p.categoryId) === String(form.categoryId)
-    );
-
-    if (duplicate) {
-      alert("❌ Product already exists with same name & category");
-      return;
-    }
 
 /* PRICE VALIDATION (NON-VARIANT PRODUCT) */
 if (!form.allowVariants) {
@@ -107,17 +92,20 @@ if (!form.allowVariants) {
 
 onSave({
   ...form,
+  _id: form._id,
   name: form.name.trim(),
-
-  categoryId: Number(form.categoryId),
-  subCategoryId: Number(form.subCategoryId),
-  childCategoryId: Number(form.childCategoryId), // ⭐ MUST
-
+  categoryId: form.categoryId,
+  subCategoryId: form.subCategoryId,
+  childCategoryId: form.childCategoryId,
+  brandId: form.brandId,
+  allowVariants: form.allowVariants,
+  trackingType: form.trackingType,
   mrp: form.allowVariants ? null : Number(form.mrp),
   sellingPrice: form.allowVariants
     ? null
     : Number(form.sellingPrice)
 });
+
 
   };
 
@@ -186,7 +174,6 @@ const filteredChildCategories = useMemo(() => {
   </option>
 ))}
 
-          ))}
         </select>
 
 {/* SUB CATEGORY */}
@@ -201,7 +188,7 @@ const filteredChildCategories = useMemo(() => {
   <option value="">Select Sub-Category</option>
 
   {filteredSubCategories.map(sc => (
-    <option key={sc.id} value={sc.id}>
+    <option key={sc._id} value={sc._id}>
       {sc.name}
     </option>
   ))}
@@ -218,7 +205,7 @@ const filteredChildCategories = useMemo(() => {
   <option value="">Select Product Type</option>
 
   {filteredChildCategories.map(cc => (
-    <option key={cc.id} value={cc.id}>
+    <option key={cc._id} value={cc._id}>
       {cc.name}
     </option>
   ))}
@@ -234,7 +221,7 @@ const filteredChildCategories = useMemo(() => {
 >
   <option value="">Select Brand</option>
   {brands.map(b => (
-    <option key={b.id} value={b.id}>
+    <option key={b._id} value={b._id}>
       {b.name}
     </option>
   ))}

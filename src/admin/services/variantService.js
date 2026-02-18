@@ -7,12 +7,16 @@ import api from "../../core/api/api";
 export const listVariants = async (productId) => {
   if (!productId) return [];
 
-  // ✅ CORRECT BACKEND ROUTE
-  const res = await api.get(
-    `/products/${productId}/variants`
-  );
+  try {
+    const res = await api.get(
+      `/products/${productId}/variants`
+    );
 
-  return Array.isArray(res?.data) ? res.data : [];
+    return Array.isArray(res?.data) ? res.data : [];
+  } catch (err) {
+    console.error("❌ Variant list failed", err);
+    return [];
+  }
 };
 
 
@@ -25,28 +29,39 @@ export const createVariant = async (productId, payload) => {
     throw new Error("Product ID missing for variant create");
   }
 
-  const res = await api.post(
-    `/products/${productId}/variants`,
-    payload
-  );
+  try {
+    const res = await api.post(
+      `/products/${productId}/variants`,
+      payload
+    );
 
-  return res.data;
+    return res.data;
+  } catch (err) {
+    console.error("❌ Variant create failed", err);
+    throw err;
+  }
 };
 
 
 /* ==============================
-   ✏️ UPDATE VARIANT PRICE
+   ✏️ UPDATE VARIANT (PRICE + IMAGES + ATTRIBUTES)
 ============================== */
 
-export const updateVariantPrice = async (variantId, payload) => {
+export const updateVariant = async (variantId, payload) => {
   if (!variantId) {
-    throw new Error("Variant ID missing for price update");
+    throw new Error("Variant ID missing for update");
   }
 
-  const res = await api.put(
-    `/variants/${variantId}`,
-    payload
-  );
+  try {
+    const res = await api.put(
+      `/products/variants/${variantId}`,
+      payload
+    );
 
-  return res.data;
+    return res.data;
+  } catch (err) {
+    console.error("❌ Variant update failed", err);
+    throw err;
+  }
 };
+

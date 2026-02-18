@@ -1,7 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { updateProduct } from "../../services/productService";
-import { updateVariantPrice } from "../../services/variantService";
+import { updateVariant } from "../../services/variantService";
 import { listVariants } from "../../services/variantService";
 
 
@@ -81,23 +81,28 @@ useEffect(() => {
   subCategories={subCategories}
   childCategories={childCategories}
   brands={brands}
-onSave={async ({ product, variantPrice }) => {
+onSave={async ({ product: formProduct, variantPrice }) => {
   try {
     // 1️⃣ PRODUCT UPDATE (🔥 allowVariants forced)
-    const updatedProduct = await updateProduct({
-      ...product,
-      allowVariants: product.allowVariants === true
-    });
+const updatedProduct = await updateProduct({
+  _id: product._id,     // 🔥 FORCE ORIGINAL ID
+  ...formProduct,
+  allowVariants: product?.allowVariants
+});
+
+
+
 
     // 2️⃣ VARIANT PRICE UPDATE (ONLY FOR VARIANT PRODUCT)
     if (variantPrice) {
-      await updateVariantPrice(
-        variantPrice.variantId,
-        {
-          mrp: variantPrice.mrp,
-          sellingPrice: variantPrice.sellingPrice
-        }
-      );
+await updateVariant(
+  variantPrice.variantId,
+  {
+    mrp: variantPrice.mrp,
+    sellingPrice: variantPrice.sellingPrice
+  }
+);
+
     }
 
     // 3️⃣ STATE SYNC

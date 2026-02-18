@@ -43,6 +43,19 @@ export default function CustomerProfile({ customerId }) {
 
   if (error)
     return <p style={{ color: "red" }}>{error}</p>;
+/* 📅 FORMAT JOIN DATE */
+const formatDate = (dateString) => {
+  if (!dateString) return "-";
+
+  const date = new Date(dateString);
+
+  return date.toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+};
+
 
   if (!customer)
     return <p>No customer profile found</p>;
@@ -87,6 +100,12 @@ export default function CustomerProfile({ customerId }) {
           <b>Phone:</b> {customer.mobile || "-"}
         </p>
       )}
+
+{/* 📅 JOIN DATE */}
+<p>
+  <b>Joined On:</b> {formatDate(customer.createdAt)}
+</p>
+
 
       {/* 🔮 FUTURE FIELDS */}
       {schema.dob && (
