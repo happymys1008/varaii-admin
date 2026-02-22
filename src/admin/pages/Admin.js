@@ -45,7 +45,7 @@ import Billing from "./orders/Billing";
 import { downloadInvoice } from "../../utils/billing/invoice";
 
 import ProductAttributes from "./catalog/ProductAttributes";
-import ProductView from "./catalog/ProductView";
+
 
 
 import ReviewsDashboard from "./reviews/ReviewsDashboard";

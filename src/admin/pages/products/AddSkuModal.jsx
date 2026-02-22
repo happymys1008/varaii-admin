@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../../../core/api/api";
 
 export default function AddSkuModal({
@@ -11,7 +11,9 @@ export default function AddSkuModal({
 })
 
  {
-const variantConfig = product?.variantConfig || [];
+const variantConfig = useMemo(() => {
+  return product?.variantConfig || [];
+}, [product?.variantConfig]);
 
 const hasColor = variantConfig.includes("COLOR");
 
