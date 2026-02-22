@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import api from "../../../core/api/api";
 
-import { listVariants } from "../../services/variantService";
 
+
+import { listColors } from "../../services/productColorService";
+import { listSkusByColor } from "../../services/skuService";
 
 
 export default function InventoryCategory() {
@@ -11,9 +13,12 @@ export default function InventoryCategory() {
   const [inventory, setInventory] = useState([]);
   const [brands, setBrands] = useState([]);
 
-const [variantsMap, setVariantsMap] = useState({});
+
 
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+
+
+const [skuMap, setSkuMap] = useState({});
 
   /* ================= LOAD DATA ================= */
 
@@ -83,32 +88,39 @@ console.log("INVENTORY RAW:", invRes.data);
 
 
 useEffect(() => {
-  const loadVariants = async () => {
+  const loadSkuLabels = async () => {
     const map = {};
 
     for (const product of products) {
-      if (product.allowVariants) {
-        try {
-          const variants = await listVariants(product._id);
+      if (!product.hasVariants) continue;
 
-variants.forEach((v) => {
-  map[String(v._id)] = Object.values(v.attributes || {}).join(" / ");
-});
+      try {
+        const colors = await listColors(product._id);
 
+        for (const color of colors) {
+          const skus = await listSkusByColor(color._id);
 
-        } catch (err) {
-          console.error("Variant load error", err);
+          skus.forEach((sku) => {
+            map[String(sku._id)] =
+              `${color.colorName} / ${sku.ram} / ${sku.storage}`;
+          });
         }
+
+      } catch (err) {
+        console.error("SKU load error", err);
       }
     }
 
-    setVariantsMap(map);
+    setSkuMap(map);
   };
 
   if (products.length) {
-    loadVariants();
+    loadSkuLabels();
   }
 }, [products]);
+
+
+
 
 
   /* ================= BUILD ROWS ================= */
@@ -131,9 +143,9 @@ variants.forEach((v) => {
 
         return {
           productName: product.name,
-variantLabel: inv.variantId
-  ? variantsMap[String(inv.variantId)] || "—"
- : <span style={{ color: "#777" }}>Non-Variant</span>,
+skuLabel: inv.skuId
+  ? skuMap[String(inv.skuId)] || "—"
+  : <span style={{ color: "#777" }}>Non-Variant</span>,
 
 
 
@@ -145,7 +157,7 @@ serials: inv.serials || []
         };
       })
       .filter(Boolean);
-  }, [inventory, products, brands, selectedCategoryId, variantsMap]);
+  }, [inventory, products, brands, selectedCategoryId, skuMap]);
 
   /* ================= UI ================= */
 
@@ -174,7 +186,7 @@ serials: inv.serials || []
           <thead>
             <tr>
               <th>Product</th>
-              <th>Variant</th>
+              <th>SKU</th>
               <th>Brand</th>
               <th>Tracking</th>
               <th>Qty</th>
@@ -194,7 +206,7 @@ serials: inv.serials || []
             {rows.map((row, i) => (
               <tr key={i}>
                 <td>{row.productName}</td>
-                <td>{row.variantLabel}</td>
+                <td>{row.skuLabel}</td>
                 <td>{row.brand}</td>
                 <td align="center">{row.trackingType}</td>
                 <td align="center">{row.qty}</td>

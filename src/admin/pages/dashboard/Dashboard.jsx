@@ -4,7 +4,7 @@ import LowStockList from "./LowStockList";
 import { listLowStockInventory } from "../../services/inventoryService";
 import { listOrders } from "../../services/orderService";
 import { listProducts } from "../../services/productService";
-import { listVariants } from "../../services/variantService";
+
 
 import "./Dashboard.css";
 import StatCard from "./StatCard";
@@ -14,7 +14,7 @@ export default function Dashboard() {
 
   const [orders, setOrders] = useState([]);
   const [products, setProducts] = useState([]);
-  const [productVariants, setProductVariants] = useState([]);
+  
   const [lowStockItems, setLowStockItems] = useState([]);
   const [showLowStock, setShowLowStock] = useState(false);
   const navigate = useNavigate();
@@ -66,18 +66,7 @@ useEffect(() => {
   loadProducts();
 }, []);
 
-useEffect(() => {
-  const loadVariants = async () => {
-    try {
-      const data = await listVariants();
-      setProductVariants(data);
-    } catch (e) {
-      console.error("Variants API failed", e);
-    }
-  };
 
-  loadVariants();
-}, []);
 
 useEffect(() => {
   let isActive = true;
@@ -235,7 +224,6 @@ const loadOrders = async () => {
       <LowStockList
         items={lowStockItems}
         products={products}
-        variants={productVariants}
         onViewAll={() => navigate("/admin/inventory/mobiles")}
       />
     )}

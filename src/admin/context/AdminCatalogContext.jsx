@@ -127,12 +127,13 @@ export function AdminCatalogProvider({ children }) {
 
   /* ================= ADMIN PRODUCTS (RAW) ================= */
 
-  const adminProducts = useMemo(() => {
-    return products.map(p => ({
-      ...p,
-      id: p._id
-    }));
-  }, [products]);
+const adminProducts = useMemo(() => {
+  return (products || []).map(p => ({
+    ...p,
+    id: p._id,
+    hasVariants: Boolean(p.hasVariants) // 🔥 FORCE BOOLEAN
+  }));
+}, [products]);
 
   /* ================= CREATE PRODUCT ================= */
 
@@ -140,22 +141,26 @@ const createProduct = async payload => {
   try {
     const res = await api.post("/products", payload);
 
-    // 🔴 SAFETY: backend must return product
-    if (!res?.data?._id) {
-      throw new Error("Product not created");
+    console.log("CREATE PRODUCT RESPONSE:", res.data);
+
+    // Try every possible response format safely
+    const product =
+      res?.data?.data ||
+      res?.data?.product ||
+      (res?.data?._id ? res.data : null);
+
+    if (!product) {
+      console.warn("Unexpected response format:", res.data);
+      throw new Error("Invalid server response");
     }
 
-    // ✅ INSTANT UI UPDATE (no dependency on reload)
-    setProducts(prev => [res.data, ...prev]);
+    setProducts(prev => [product, ...prev]);
 
-    // 🔁 Background refresh (optional)
-    loadProducts().catch(() => {});
-    loadInventory().catch(() => {});
+    return product;
 
-    return res.data; // success
   } catch (err) {
-    console.error("createProduct API failed:", err);
-    throw err; // 🔥 VERY IMPORTANT
+    console.error("createProduct failed:", err);
+    throw err;
   }
 };
 

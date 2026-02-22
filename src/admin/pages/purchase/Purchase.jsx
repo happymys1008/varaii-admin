@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import PurchaseProductSelector from "./PurchaseProductSelector";
 import { createPurchaseApi } from "../../services/purchaseService";
-import { listVariants } from "../../services/variantService";
+import { listSkusByColor } from "../../services/skuService";
+import { listColors } from "../../services/productColorService";
 
 import {
   listSuppliers,
@@ -39,18 +40,24 @@ useEffect(() => {
 
 
 
+/* ========= MULTI ITEM ========= */
+const [items, setItems] = useState([
+  {
+    id: Date.now(),
+    product: null,
 
-  /* ========= MULTI ITEM ========= */
-  const [items, setItems] = useState([
-    {
-      id: Date.now(),
-      product: null,
-      variant: null,
-      qty: 1,
-      costPrice: "",
-      imeis: []
-    }
-  ]);
+    // ✅ ENTERPRISE FLOW
+    color: null,
+    _colors: [],
+
+    sku: null,
+    _skus: [],
+
+    qty: 1,
+    costPrice: "",
+    imeis: []
+  }
+]);
 
   /* ========= IMEI DRAWER ========= */
   const [showDrawer, setShowDrawer] = useState(false);
@@ -86,7 +93,7 @@ const addSupplier = async () => {
     // 🔒 DUPLICATE GUARD
     const seen = new Set();
     for (let row of validItems) {
-      const key = `${row.product.id}__${row.variant?._id || "NO_VARIANT"}`;
+      const key = `${row.product.id}__${row.sku?._id || "NO_SKU"}`;
       if (seen.has(key)) {
         alert(`❌ Same product & variant added twice: ${row.product.name}`);
         return;
@@ -99,12 +106,17 @@ const addSupplier = async () => {
       return;
     }
 
-    for (let row of validItems) {
-      if (!row.costPrice || row.qty <= 0) {
-        alert("Please fill all rows properly");
-        return;
-      }
-    }
+for (let row of validItems) {
+  if (!row.costPrice || row.qty <= 0) {
+    alert("Please fill all rows properly");
+    return;
+  }
+
+  if (row.product.hasVariants && !row.sku?._id) {
+    alert("Please select SKU for variant product");
+    return;
+  }
+}
 
     try {
       await createPurchaseApi({
@@ -113,23 +125,26 @@ const addSupplier = async () => {
         invoiceDate: date,
         items: validItems.map(row => ({
           productId: row.product.id,
-          variantId: row.product.allowVariants ? row.variant?._id : null,
+          skuId: row.product.hasVariants ? row.sku?._id : null,
           qty: row.qty,
           costPrice: Number(row.costPrice),
           imeis: row.imeis || []
         }))
       });
 
-      setItems([
-        {
-          id: Date.now(),
-          product: null,
-          variant: null,
-          qty: 1,
-          costPrice: "",
-          imeis: []
-        }
-      ]);
+setItems([
+  {
+    id: Date.now(),
+    product: null,
+    color: null,
+    _colors: [],
+    sku: null,
+    _skus: [],
+    qty: 1,
+    costPrice: "",
+    imeis: []
+  }
+]);
       setInvoiceNo("");
       setShowDrawer(false);
 
@@ -176,18 +191,19 @@ const addSupplier = async () => {
 
       {/* TABLE */}
       <table width="100%" border="1" cellPadding="8">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Product</th>
-            <th>Variant</th>
-            <th>Qty</th>
-            <th>Cost</th>
-            <th>IMEI / Serial</th>
-            <th>Total</th>
-            <th></th>
-          </tr>
-        </thead>
+<thead>
+  <tr>
+    <th>#</th>
+    <th>Product</th>
+    <th>Color</th>
+    <th>SKU</th>
+    <th>Qty</th>
+    <th>Cost</th>
+    <th>IMEI / Serial</th>
+    <th>Total</th>
+    <th></th>
+  </tr>
+</thead>
 
         <tbody>
           {items.map((row, index) => (
@@ -219,64 +235,119 @@ const addSupplier = async () => {
                     </button>
                   </>
                 ) : (
-                  <PurchaseProductSelector
-onSelect={async ({ product }) => {
-  const copy = [...items];
-  copy[index].product = product;
-  copy[index].variant = null;
-  copy[index].imeis = [];
-  copy[index].qty = 1;
-  copy[index]._variants = []; // 👈 reset
-  setItems(copy);
+<PurchaseProductSelector
+  onSelect={async ({ product }) => {
+    const copy = [...items];
 
-  // 🔥 LOAD VARIANTS FROM BACKEND
-  if (product.allowVariants) {
-    try {
-      const res = await listVariants(product.id);
+    // ✅ RESET EVERYTHING ON PRODUCT CHANGE
+    copy[index] = {
+      ...copy[index],
+      product,
+      color: null,
+      _colors: [],
+      sku: null,
+      _skus: [],
+      imeis: [],
+      qty: 1
+    };
 
-      setItems(prev => {
-        const updated = [...prev];
-        updated[index] = {
-          ...updated[index],
-          _variants: res || []
-        };
-        return updated;
-      });
-    } catch (err) {
-      console.error("Variant load failed", err);
+    setItems(copy);
+
+    // ✅ LOAD COLORS IF VARIANT PRODUCT
+    if (product.hasVariants) {
+      try {
+        const colors = await listColors(product.id);
+
+        setItems(prev => {
+          const updated = [...prev];
+          updated[index]._colors = colors || [];
+          return updated;
+        });
+
+      } catch (err) {
+        console.error("Color load failed", err);
+      }
     }
-  }
-}}
-
-                  />
+  }}
+/>
                 )}
               </td>
 
+
 <td>
-  {row.product?.allowVariants ? (
+  {row.product?.hasVariants ? (
     <select
-      value={row.variant?._id || ""}
-      onChange={e => {
-        const v = row._variants?.find(
-          x => String(x._id) === e.target.value
+      value={row.color?._id || ""}
+      onChange={async e => {
+
+        const selectedColor = row._colors.find(
+          c => String(c._id) === e.target.value
         );
 
         const copy = [...items];
-        copy[index].variant = v || null;
+
+        copy[index].color = selectedColor || null;
+        copy[index].sku = null;
+        copy[index]._skus = [];
         copy[index].imeis = [];
+
         setItems(copy);
+
+        if (selectedColor) {
+          try {
+            const skus = await listSkusByColor(selectedColor._id);
+
+            setItems(prev => {
+              const updated = [...prev];
+              updated[index]._skus = skus || [];
+              return updated;
+            });
+
+          } catch (err) {
+            console.error("SKU load failed", err);
+          }
+        }
       }}
     >
-      <option value="">Select</option>
+      <option value="">Select Color</option>
 
-      {(row._variants || []).map(v => (
-        <option key={v._id} value={v._id}>
-          {Object.values(v.attributes || {}).join(" / ")}
+      {(row._colors || []).map(c => (
+        <option key={c._id} value={c._id}>
+          {c.colorName}
         </option>
       ))}
     </select>
   ) : "-"}
 </td>
+
+<td>
+  {row.product?.hasVariants ? (
+    <select
+      value={row.sku?._id || ""}
+      onChange={e => {
+
+const selected = row._skus.find(
+  s => String(s._id) === String(e.target.value)
+);
+
+        const copy = [...items];
+        copy[index].sku = selected || null;
+        copy[index].imeis = [];
+        setItems(copy);
+      }}
+    >
+      <option value="">Select SKU</option>
+
+      {(row._skus || []).map(s => (
+        <option key={s._id} value={s._id}>
+          {s.skuCode} ({s.ram} / {s.storage})
+        </option>
+      ))}
+    </select>
+  ) : "-"}
+</td>
+
+
 
 
               <td>
@@ -341,17 +412,20 @@ onSelect={async ({ product }) => {
       <button
         style={{ marginTop: 10 }}
         onClick={() =>
-          setItems(prev => [
-            ...prev,
-            {
-              id: Date.now(),
-              product: null,
-              variant: null,
-              qty: 1,
-              costPrice: "",
-              imeis: []
-            }
-          ])
+setItems(prev => [
+  ...prev,
+  {
+    id: Date.now(),
+    product: null,
+    color: null,
+    _colors: [],
+    sku: null,
+    _skus: [],
+    qty: 1,
+    costPrice: "",
+    imeis: []
+  }
+])
         }
       >
         ➕ Add Item

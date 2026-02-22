@@ -19,7 +19,7 @@ export default function ProductBasicInfo({
     childCategoryId: "",
     brandId: "",
     trackingType: "QTY",
-    allowVariants: false,
+    hasVariants: false,
     mrp: "",
     sellingPrice: ""
   });
@@ -42,7 +42,7 @@ const defaultVariant = useMemo(() => {
 useEffect(() => {
   if (!product) return;
 
-  const isVariantProduct = Boolean(product.allowVariants);
+  const isVariantProduct = Boolean(product.hasVariants);
 
   setForm({
     name: product.name || "",
@@ -55,7 +55,7 @@ useEffect(() => {
       : "",
     brandId: product.brandId ? String(product.brandId) : "",
     trackingType: product.trackingType || "QTY",
-    allowVariants: Boolean(product.allowVariants),
+    hasVariants: Boolean(product.hasVariants),
 
     // 🔥 FINAL PRICE LOGIC
     mrp: isVariantProduct
@@ -81,7 +81,7 @@ useEffect(() => {
     if (!form.categoryId) return alert("Category is required");
     if (!form.childCategoryId) return alert("Product type is required");
 
-    if (!form.allowVariants) {
+    if (!form.hasVariants) {
       if (!form.mrp || !form.sellingPrice)
         return alert("MRP & Selling Price required");
       if (+form.sellingPrice > +form.mrp)
@@ -103,7 +103,7 @@ if (isEdit && product?._id) {
 
 
 // 🔥 NON-VARIANT PRODUCT → price goes to PRODUCT
-if (!form.allowVariants) {
+if (!form.hasVariants) {
   onSave({
     product: {
       ...payload,
@@ -229,9 +229,9 @@ onSave({
           <label>
             <input
               type="checkbox"
-              checked={form.allowVariants}
+              checked={form.hasVariants}
               onChange={e =>
-                update("allowVariants", e.target.checked)
+                update("hasVariants", e.target.checked)
               }
             />{" "}
             Enable Variants
@@ -240,7 +240,7 @@ onSave({
       )}
 
       {/* PRICE */}
-      {!form.allowVariants && (
+      {!form.hasVariants && (
         <>
           <input
             type="number"

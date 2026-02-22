@@ -46,7 +46,7 @@ import { downloadInvoice } from "../../utils/billing/invoice";
 
 import ProductAttributes from "./catalog/ProductAttributes";
 import ProductView from "./catalog/ProductView";
-import ProductVariants from "./products/ProductVariants";
+
 
 import ReviewsDashboard from "./reviews/ReviewsDashboard";
 
@@ -231,8 +231,8 @@ if (me.data?.role === "admin") {
               <Route path="settings/profile-schema" element={<ProfileSchemaSettings />} />
               <Route path="settings/account-sidebar" element={<AccountSidebarSettings />} />
 
-              <Route path="products/:id" element={<ProductView />} />
-              <Route path="products/:id/variants" element={<ProductVariants />} />
+              
+              
             </Routes>
 
             <br />

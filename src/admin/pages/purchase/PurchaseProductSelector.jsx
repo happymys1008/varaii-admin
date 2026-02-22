@@ -4,40 +4,54 @@ import { listProducts } from "../../services/productService";
 /**
  * PurchaseProductSelector
  * -----------------------
- * RULES:
- * ❌ Never creates product
- * ❌ Never uses localStorage
  * ✅ Reads from MongoDB only
- * ✅ Single source of truth: /api/products
+ * ✅ Supports paginated response
+ * ✅ Enterprise safe
  */
 export default function PurchaseProductSelector({ onSelect }) {
   const [products, setProducts] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(false);
 
-  /* ===== LOAD PRODUCTS FROM MONGODB ===== */
+  /* ================= LOAD PRODUCTS ================= */
   useEffect(() => {
+    let mounted = true;
+
     const loadProducts = async () => {
       try {
         setLoading(true);
-        const data = await listProducts();
-        setProducts(Array.isArray(data) ? data : []);
+
+        const response = await listProducts();
+
+        // ✅ Supports paginated response { data, total, page }
+        const list = Array.isArray(response?.data)
+          ? response.data
+          : Array.isArray(response)
+          ? response
+          : [];
+
+        if (mounted) {
+          setProducts(list);
+        }
       } catch (err) {
         console.error("❌ Failed to load products", err);
-        setProducts([]);
+        if (mounted) setProducts([]);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     loadProducts();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
-  /* ===== NORMALIZER ===== */
+  /* ================= HELPERS ================= */
   const normalize = (v = "") =>
-    v.toString().toLowerCase().trim();
+    String(v).toLowerCase().trim();
 
-  /* ===== FILTERED LIST ===== */
   const filteredProducts = useMemo(() => {
     const q = normalize(search);
     if (!q) return [];
@@ -47,25 +61,29 @@ export default function PurchaseProductSelector({ onSelect }) {
     );
   }, [search, products]);
 
-  /* ===== SELECT HANDLER ===== */
+  /* ================= SELECT ================= */
   const handleSelect = (product) => {
+    if (!product) return;
+
     onSelect({
       product: {
         id: product._id,
         name: product.name,
         trackingType: product.trackingType,
-        allowVariants: product.allowVariants
+        hasVariants: product.hasVariants
       }
     });
+
     setSearch(product.name);
   };
 
+  /* ================= UI ================= */
   return (
     <div style={{ position: "relative", marginTop: 6 }}>
       <input
         placeholder="Search product…"
         value={search}
-        onChange={e => setSearch(e.target.value)}
+        onChange={(e) => setSearch(e.target.value)}
         style={{
           width: "100%",
           padding: 8,
@@ -74,7 +92,7 @@ export default function PurchaseProductSelector({ onSelect }) {
         }}
       />
 
-      {search && (
+      {search.trim() !== "" && (
         <div
           style={{
             position: "absolute",
@@ -90,15 +108,13 @@ export default function PurchaseProductSelector({ onSelect }) {
             overflowY: "auto"
           }}
         >
-          {/* LOADING */}
           {loading && (
             <div style={{ padding: 10, textAlign: "center" }}>
               Loading products…
             </div>
           )}
 
-          {/* FOUND */}
-          {!loading && filteredProducts.map(p => (
+          {!loading && filteredProducts.map((p) => (
             <div
               key={p._id}
               onClick={() => handleSelect(p)}
@@ -114,12 +130,11 @@ export default function PurchaseProductSelector({ onSelect }) {
 
               <div style={{ fontSize: 12, color: "#666" }}>
                 {p.trackingType}
-                {p.allowVariants ? " • Variants" : ""}
+                {p.hasVariants ? " • SKU Product" : ""}
               </div>
             </div>
           ))}
 
-          {/* NOT FOUND */}
           {!loading && filteredProducts.length === 0 && (
             <div
               style={{

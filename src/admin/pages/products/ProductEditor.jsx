@@ -1,8 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { updateProduct } from "../../services/productService";
-import { updateVariant } from "../../services/variantService";
-import { listVariants } from "../../services/variantService";
+
 
 
 /* ✅ ADMIN CATALOG = SINGLE SOURCE */
@@ -30,7 +29,7 @@ export default function ProductEditor() {
 
   const isCreate = !id;
   const [product, setProduct] = useState(null);
-const [variants, setVariants] = useState([]);
+
 
   /* ================= LOAD PRODUCT (EDIT MODE) ================= */
   useEffect(() => {
@@ -47,18 +46,7 @@ const [variants, setVariants] = useState([]);
   }, [id, isCreate, products]);
 
 
-useEffect(() => {
-  if (!product?._id) return;
 
-  listVariants(product._id)
-    .then(v => {
-      setVariants(v || []);
-    })
-    .catch(err => {
-      console.error("❌ Variant load failed", err);
-      setVariants([]);
-    });
-}, [product?._id]);
 
   /* ================= LOADING STATE ================= */
   if (!isCreate && productsLoading) {
@@ -72,40 +60,19 @@ useEffect(() => {
 
       {/* STEP 1–2 : BASIC INFO */}
 <ProductBasicInfo
-  product={
-    product
-      ? { ...product, variants }
-      : null
-  }
+  product={product || null}
   categories={categories}
   subCategories={subCategories}
   childCategories={childCategories}
   brands={brands}
-onSave={async ({ product: formProduct, variantPrice }) => {
+onSave={async ({ product: formProduct }) => {
   try {
-    // 1️⃣ PRODUCT UPDATE (🔥 allowVariants forced)
-const updatedProduct = await updateProduct({
-  _id: product._id,     // 🔥 FORCE ORIGINAL ID
-  ...formProduct,
-  allowVariants: product?.allowVariants
-});
+    const updatedProduct = await updateProduct({
+      _id: product._id,
+      ...formProduct,
+      hasVariants: product?.hasVariants
+    });
 
-
-
-
-    // 2️⃣ VARIANT PRICE UPDATE (ONLY FOR VARIANT PRODUCT)
-    if (variantPrice) {
-await updateVariant(
-  variantPrice.variantId,
-  {
-    mrp: variantPrice.mrp,
-    sellingPrice: variantPrice.sellingPrice
-  }
-);
-
-    }
-
-    // 3️⃣ STATE SYNC
     setProduct(updatedProduct);
 
     alert("Saved successfully ✅");
@@ -114,7 +81,6 @@ await updateVariant(
     alert("Save failed. Please try again.");
   }
 }}
-
 />
 
 

@@ -2,7 +2,7 @@ import { Routes, Route } from "react-router-dom";
 
 import ProductsPage from "./index";
 import ProductEditor from "./ProductEditor";
-import ProductVariants from "./ProductVariants";
+import ProductSkus from "./ProductSkus";
 import ProductView from "../catalog/ProductView";
 
 export default function ProductsRoutes() {
@@ -15,7 +15,7 @@ export default function ProductsRoutes() {
       <Route path=":id/edit" element={<ProductEditor />} />
 
       {/* 🧩 VARIANTS */}
-      <Route path=":id/variants" element={<ProductVariants />} />
+      <Route path=":id/variants" element={<ProductSkus />} />
 
       {/* 👁 VIEW (LEGACY SAFE) */}
       <Route path=":id" element={<ProductView />} />

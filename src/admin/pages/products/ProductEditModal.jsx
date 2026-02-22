@@ -77,7 +77,7 @@ if (!form.childCategoryId) {
 
 
 /* PRICE VALIDATION (NON-VARIANT PRODUCT) */
-if (!form.allowVariants) {
+if (!form.hasVariants) {
   if (!form.mrp || !form.sellingPrice) {
     alert("MRP & Selling Price are required");
     return;
@@ -98,10 +98,10 @@ onSave({
   subCategoryId: form.subCategoryId,
   childCategoryId: form.childCategoryId,
   brandId: form.brandId,
-  allowVariants: form.allowVariants,
+  hasVariants: form.hasVariants,
   trackingType: form.trackingType,
-  mrp: form.allowVariants ? null : Number(form.mrp),
-  sellingPrice: form.allowVariants
+  mrp: form.hasVariants ? null : Number(form.mrp),
+  sellingPrice: form.hasVariants
     ? null
     : Number(form.sellingPrice)
 });
@@ -138,7 +138,7 @@ const filteredChildCategories = useMemo(() => {
         />
 
 {/* PRICE — ONLY WHEN VARIANTS OFF */}
-{!form.allowVariants && (
+{!form.hasVariants && (
   <>
     <input
       type="number"
@@ -247,9 +247,9 @@ const filteredChildCategories = useMemo(() => {
             <label style={{ fontSize: 14 }}>
               <input
                 type="checkbox"
-                checked={!!form.allowVariants}
+                checked={!!form.hasVariants}
                 onChange={e => {
-                  update("allowVariants", e.target.checked);
+                  update("hasVariants", e.target.checked);
                   if (e.target.checked) {
   update("mrp", "");
   update("sellingPrice", "");
@@ -259,7 +259,7 @@ const filteredChildCategories = useMemo(() => {
               Enable Variants
             </label>
 
-            {form.allowVariants && (
+            {form.hasVariants && (
               <div
                 style={{
                   fontSize: 12,
@@ -283,7 +283,7 @@ const filteredChildCategories = useMemo(() => {
 
             <div>
               <b>Variants Enabled:</b>{" "}
-              {form.allowVariants ? "Yes" : "No"}
+              {form.hasVariants ? "Yes" : "No"}
             </div>
 
             <div style={{ fontSize: 12, opacity: 0.7, marginTop: 4 }}>

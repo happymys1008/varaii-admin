@@ -31,7 +31,7 @@ export const createProduct = async (product) => {
     const payload = { ...product };
 
     // 🔒 CREATE RULE (UNCHANGED)
-    if (payload.allowVariants === true) {
+    if (payload.hasVariants === true) {
       delete payload.mrp;
       delete payload.sellingPrice;
     } else {
@@ -67,13 +67,13 @@ export const updateProduct = async (product) => {
     const payload = { ...product };
 
     // ✅ VARIANT PRODUCT → PRICE NOT IN PRODUCT
-    if (payload.allowVariants === true) {
+    if (payload.hasVariants === true) {
       delete payload.mrp;
       delete payload.sellingPrice;
     }
 
     // ✅ NON-VARIANT PRODUCT → PRICE SAVED IN PRODUCT
-    if (payload.allowVariants === false) {
+    if (payload.hasVariants === false) {
       payload.mrp = Number(payload.mrp);
       payload.sellingPrice = Number(payload.sellingPrice);
     }

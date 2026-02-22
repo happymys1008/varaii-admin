@@ -102,7 +102,7 @@ const qty = inventory
   </button>
 
   {/* 🧩 VARIANTS */}
-  {p.allowVariants && (
+  {p.hasVariants && (
 <button
   onClick={() =>
     navigate(

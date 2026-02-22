@@ -1,22 +1,39 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import api from "../../../core/api/api";
 
 export default function PurchaseRegister() {
   const [purchases, setPurchases] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  /* ================= LOAD ================= */
+  /* ================= LOAD DATA ================= */
   const loadData = async () => {
     try {
+      setLoading(true);
+
       const [pRes, sRes] = await Promise.all([
         api.get("/purchases"),
         api.get("/suppliers"),
       ]);
 
-      setPurchases(pRes.data || []);
-      setSuppliers(sRes.data || []);
+      // ✅ Support paginated or normal response
+      const purchaseList = Array.isArray(pRes?.data?.data)
+        ? pRes.data.data
+        : Array.isArray(pRes?.data)
+        ? pRes.data
+        : [];
+
+      const supplierList = Array.isArray(sRes?.data)
+        ? sRes.data
+        : [];
+
+      setPurchases(purchaseList);
+      setSuppliers(supplierList);
     } catch (err) {
       console.error("Failed loading purchase register", err);
+      setPurchases([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -26,7 +43,6 @@ export default function PurchaseRegister() {
 
   /* ================= HELPERS ================= */
 
-  // Supplier ID → Name
   const getSupplierName = (supplierId) => {
     const s = suppliers.find(
       (x) => String(x._id || x.id) === String(supplierId)
@@ -35,13 +51,15 @@ export default function PurchaseRegister() {
   };
 
   const getPurchaseTotal = (purchase) => {
-    return (purchase.items || []).reduce(
-      (sum, i) => sum + (i.qty || 0) * (i.costPrice || 0),
-      0
-    );
+    return (purchase?.items || []).reduce((sum, item) => {
+      const qty = Number(item?.qty) || 0;
+      const cost = Number(item?.costPrice) || 0;
+      return sum + qty * cost;
+    }, 0);
   };
 
   /* ================= DELETE ================= */
+
   const handleDelete = async (id) => {
     const ok = window.confirm(
       "Delete this purchase?\nStock will be reversed."
@@ -52,15 +70,25 @@ export default function PurchaseRegister() {
       await api.delete(`/purchases/${id}`);
       loadData();
     } catch (err) {
+      console.error("Delete failed", err);
       alert("Delete failed");
     }
   };
+
+  /* ================= FILTER ACTIVE ================= */
+  const activePurchases = useMemo(() => {
+    return purchases.filter((p) => p.status === "ACTIVE");
+  }, [purchases]);
+
+  /* ================= UI ================= */
 
   return (
     <div className="admin-page">
       <h2 style={{ marginBottom: 16 }}>Purchase Register</h2>
 
-      {purchases.length === 0 ? (
+      {loading ? (
+        <p>Loading purchases...</p>
+      ) : activePurchases.length === 0 ? (
         <p>No purchases found</p>
       ) : (
         <table
@@ -83,45 +111,43 @@ export default function PurchaseRegister() {
           </thead>
 
           <tbody>
-            {purchases
-              .filter((p) => p.status === "ACTIVE")
-              .map((p) => (
-                <tr
-                  key={p._id || p.id}
-                  style={{ borderBottom: "1px solid #e5e7eb" }}
-                >
-                  <td style={td}>
-                    {p.invoiceDate
-                      ? new Date(p.invoiceDate).toLocaleDateString()
-                      : "-"}
-                  </td>
+            {activePurchases.map((p) => (
+              <tr
+                key={p._id || p.id}
+                style={{ borderBottom: "1px solid #e5e7eb" }}
+              >
+                <td style={td}>
+                  {p.invoiceDate
+                    ? new Date(p.invoiceDate).toLocaleDateString()
+                    : "-"}
+                </td>
 
-                  <td style={td}>{p.invoiceNo || "-"}</td>
+                <td style={td}>{p.invoiceNo || "-"}</td>
 
-                  <td style={td}>
-                    {getSupplierName(p.supplierId)}
-                  </td>
+                <td style={td}>
+                  {getSupplierName(p.supplierId)}
+                </td>
 
-                  <td style={{ ...td, textAlign: "right" }}>
-                    ₹{getPurchaseTotal(p)}
-                  </td>
+                <td style={{ ...td, textAlign: "right" }}>
+                  ₹{getPurchaseTotal(p).toLocaleString()}
+                </td>
 
-                  <td style={{ ...td, textAlign: "center" }}>
-                    {p.status}
-                  </td>
+                <td style={{ ...td, textAlign: "center" }}>
+                  {p.status}
+                </td>
 
-                  <td style={{ ...td, textAlign: "center" }}>
-                    <button
-                      style={deleteBtn}
-                      onClick={() =>
-                        handleDelete(p._id || p.id)
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                <td style={{ ...td, textAlign: "center" }}>
+                  <button
+                    style={deleteBtn}
+                    onClick={() =>
+                      handleDelete(p._id || p.id)
+                    }
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       )}
