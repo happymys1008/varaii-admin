@@ -92,7 +92,8 @@ useEffect(() => {
   selectedSubCategory,
   selectedChildCategory,
   stockFilter,
-  page
+  page,
+  reloadProducts
 ]);
 
 
