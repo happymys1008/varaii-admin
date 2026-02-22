@@ -71,7 +71,7 @@ export default function Billing() {
     }
 
     try {
-      await api.post("/api/billing/generate", {
+      await api.post("/billing/generate", {
         orderId: selectedOrder._id || selectedOrder.id,
         selectedCodes
       });
@@ -95,7 +95,7 @@ export default function Billing() {
     if (!window.confirm("Cancel bill & restore stock?")) return;
 
     try {
-      await api.post("/api/billing/cancel", {
+      await api.post("/billing/cancel", {
         billId: bill._id || bill.id
       });
 

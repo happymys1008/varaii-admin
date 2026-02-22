@@ -40,7 +40,7 @@ export default function Brands() {
     }
 
     try {
-      const res = await api.post("/api/brands", {
+      const res = await api.post("/brands", {
         name: cleanedName
       });
 

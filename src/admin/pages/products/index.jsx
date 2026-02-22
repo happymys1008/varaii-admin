@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ProductList from "./ProductList";
 import ProductsDashboard from "./ProductsDashboard";
 import CreateProductModal from "./CreateProductModal";
@@ -6,18 +6,32 @@ import { useAdminCatalog } from "../../context/AdminCatalogContext";
 
 export default function ProductsPage() {
 
+
   /* ================= ADMIN CATALOG (SINGLE SOURCE) ================= */
-  const {
-    products,
-    categories,
-    subCategories,
-    childCategories,
-    brands,
-    inventory,
-    createProduct
-  } = useAdminCatalog();
+const {
+  products,
+  categories,
+  subCategories,
+  childCategories,
+  brands,
+  inventory,
+  createProduct,
+  reloadProducts,
+  productsMeta
+} = useAdminCatalog();
 
   const [openCreate, setOpenCreate] = useState(false);
+
+/* ================= FILTER STATE ================= */
+const [search, setSearch] = useState("");
+const [selectedBrand, setSelectedBrand] = useState("");
+const [stockFilter, setStockFilter] = useState("");
+const [page, setPage] = useState(1);
+
+/* ================= CATEGORY FILTER STATE ================= */
+const [selectedCategory, setSelectedCategory] = useState("");
+const [selectedSubCategory, setSelectedSubCategory] = useState("");
+const [selectedChildCategory, setSelectedChildCategory] = useState("");
 
   /* ================= INVENTORY CALCULATION ================= */
   const simpleInventory = products
@@ -59,6 +73,33 @@ const handleSaveProduct = async (payload) => {
 };
 
 
+/* ================= BACKEND FILTER EFFECT ================= */
+useEffect(() => {
+  reloadProducts({
+    page,
+    limit: 20,
+    search,
+    brand: selectedBrand,
+    category: selectedCategory,
+    subCategory: selectedSubCategory,
+    childCategory: selectedChildCategory,
+    stock: stockFilter
+  });
+}, [
+  search,
+  selectedBrand,
+  selectedCategory,
+  selectedSubCategory,
+  selectedChildCategory,
+  stockFilter,
+  page
+]);
+
+
+
+
+
+
 
 
   /* ================= UI ================= */
@@ -83,6 +124,142 @@ const handleSaveProduct = async (payload) => {
         </button>
       </div>
 
+{/* FILTER BAR */}
+<div
+  style={{
+    display: "flex",
+    gap: 15,
+    marginBottom: 20,
+    alignItems: "center"
+  }}
+>
+  {/* SEARCH */}
+  <input
+    placeholder="Search product..."
+    value={search}
+    onChange={e => {
+      setPage(1);
+      setSearch(e.target.value);
+    }}
+    style={{
+      padding: 8,
+      width: 250,
+      borderRadius: 6,
+      border: "1px solid #ccc"
+    }}
+  />
+
+{/* CATEGORY FILTER */}
+<select
+  value={selectedCategory}
+  onChange={e => {
+    setPage(1);
+    setSelectedCategory(e.target.value);
+    setSelectedSubCategory("");
+    setSelectedChildCategory("");
+  }}
+  style={{
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #ccc"
+  }}
+>
+  <option value="">All Categories</option>
+  {categories.map(c => (
+    <option key={c._id} value={c._id}>
+      {c.name}
+    </option>
+  ))}
+</select>
+
+
+{/* SUBCATEGORY FILTER */}
+<select
+  value={selectedSubCategory}
+  onChange={e => {
+    setPage(1);
+    setSelectedSubCategory(e.target.value);
+    setSelectedChildCategory("");
+  }}
+  style={{
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #ccc"
+  }}
+>
+  <option value="">All SubCategories</option>
+  {subCategories
+    .filter(sc => sc.categoryId === selectedCategory)
+    .map(sc => (
+      <option key={sc._id} value={sc._id}>
+        {sc.name}
+      </option>
+    ))}
+</select>
+
+{/* CHILD CATEGORY FILTER */}
+<select
+  value={selectedChildCategory}
+  onChange={e => {
+    setPage(1);
+    setSelectedChildCategory(e.target.value);
+  }}
+  style={{
+    padding: 8,
+    borderRadius: 6,
+    border: "1px solid #ccc"
+  }}
+>
+  <option value="">All Child Categories</option>
+  {childCategories
+    .filter(cc => cc.subCategoryId === selectedSubCategory)
+    .map(cc => (
+      <option key={cc._id} value={cc._id}>
+        {cc.name}
+      </option>
+    ))}
+</select>
+
+  {/* BRAND FILTER */}
+  <select
+    value={selectedBrand}
+    onChange={e => {
+      setPage(1);
+      setSelectedBrand(e.target.value);
+    }}
+    style={{
+      padding: 8,
+      borderRadius: 6,
+      border: "1px solid #ccc"
+    }}
+  >
+    <option value="">All Brands</option>
+    {brands.map(b => (
+      <option key={b._id} value={b._id}>
+        {b.name}
+      </option>
+    ))}
+  </select>
+
+  {/* STOCK FILTER */}
+  <select
+    value={stockFilter}
+    onChange={e => {
+      setPage(1);
+      setStockFilter(e.target.value);
+    }}
+    style={{
+      padding: 8,
+      borderRadius: 6,
+      border: "1px solid #ccc"
+    }}
+  >
+    <option value="">All Stock</option>
+    <option value="available">Available</option>
+    <option value="out">Out of Stock</option>
+  </select>
+</div>
+
       {/* DASHBOARD */}
       <ProductsDashboard
         products={products}
@@ -101,6 +278,37 @@ const handleSaveProduct = async (payload) => {
     };
   }}
 />
+
+
+{/* PAGINATION */}
+<div
+  style={{
+    display: "flex",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 20
+  }}
+>
+  <button
+    disabled={productsMeta.page <= 1}
+    onClick={() => setPage(prev => prev - 1)}
+    className="btn btn-secondary"
+  >
+    Previous
+  </button>
+
+  <span style={{ padding: "6px 12px" }}>
+    Page {productsMeta.page} of {productsMeta.totalPages}
+  </span>
+
+  <button
+    disabled={productsMeta.page >= productsMeta.totalPages}
+    onClick={() => setPage(prev => prev + 1)}
+    className="btn btn-secondary"
+  >
+    Next
+  </button>
+</div>
 
 
       {/* CREATE PRODUCT MODAL */}

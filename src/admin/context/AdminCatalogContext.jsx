@@ -43,6 +43,11 @@ export function AdminCatalogProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [productsLoading, setProductsLoading] = useState(false);
   const [productsError, setProductsError] = useState("");
+const [productsMeta, setProductsMeta] = useState({
+  total: 0,
+  page: 1,
+  totalPages: 1
+});
 
   /* ================= INVENTORY (ADMIN ONLY) ================= */
   const [variantInventory, setVariantInventory] = useState([]);
@@ -75,20 +80,44 @@ export function AdminCatalogProvider({ children }) {
 
   /* ================= LOAD PRODUCTS ================= */
 
-  const loadProducts = async () => {
-    setProductsLoading(true);
-    setProductsError("");
+const loadProducts = async ({
+  page = 1,
+  limit = 20,
+  search,
+  brand,
+  category,
+  subCategory,
+  childCategory,
+  stock,
+  sort
+} = {}) => {
+  setProductsLoading(true);
+  setProductsError("");
 
-    try {
-      const res = await fetchProducts({ page: 1, limit: 200 });
-      setProducts(normalize(res));
-    } catch (err) {
-      setProducts([]);
-      setProductsError(err.message || "Failed loading products");
-    } finally {
-      setProductsLoading(false);
-    }
-  };
+  try {
+    const res = await fetchProducts({
+      page,
+      limit,
+      search,
+      brand,
+      category,
+      subCategory,
+      childCategory,
+      stock,
+      sort
+    });
+
+    const normalized = normalize(res);
+
+    setProducts(normalized);
+    setProductsMeta(res?.data || {});
+  } catch (err) {
+    setProducts([]);
+    setProductsError(err.message || "Failed loading products");
+  } finally {
+    setProductsLoading(false);
+  }
+};
 
   /* ================= LOAD INVENTORY (ADMIN API) ================= */
 
@@ -103,11 +132,11 @@ export function AdminCatalogProvider({ children }) {
 
   /* ================= INITIAL ================= */
 
-  useEffect(() => {
-    loadCatalog();
-    loadProducts();
-    loadInventory();
-  }, []);
+useEffect(() => {
+  loadCatalog();
+  loadProducts({ page: 1, limit: 20 });
+  loadInventory();
+}, []);
 
   /* ================= CATEGORY TREE ================= */
 
@@ -180,6 +209,7 @@ const createProduct = async payload => {
         categoryTree,
 
         products: adminProducts,
+        productsMeta,
         productsLoading,
         productsError,
 

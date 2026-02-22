@@ -37,7 +37,7 @@ export const savePurchase = async ({ purchase, items }) => {
   writeStorage(PURCHASE_ITEMS_KEY, [...purchaseItems, ...itemRecords]);
 
   /* 🔥 BACKEND STOCK ADD (PRO WAY) */
-  await api.post("/api/inventory/purchase-add", {
+  await api.post("/inventory/purchase-add", {
     purchaseId,
     items
   });
@@ -77,7 +77,7 @@ export const deletePurchase = async purchaseId => {
   const relatedItems = items.filter(i => i.purchaseId === purchaseId);
 
   /* 🔥 BACKEND STOCK REVERSE */
-  await api.post("/api/inventory/purchase-reverse", {
+  await api.post("/inventory/purchase-reverse", {
     purchaseId,
     items: relatedItems
   });
