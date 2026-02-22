@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useParams, useLocation } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import api from "../../../core/api/api";
 import AddSkuModal from "./AddSkuModal";
 
@@ -17,8 +17,7 @@ import {
 
 export default function ProductSkus() {
   const { id } = useParams();
-  const location = useLocation();
-  const fallbackName = location.state?.productName || "Selected Product";
+  
 
   const [product, setProduct] = useState(null);
   const [colors, setColors] = useState([]);
