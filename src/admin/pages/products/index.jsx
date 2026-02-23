@@ -73,7 +73,6 @@ const handleSaveProduct = async (payload) => {
 };
 
 
-/* ================= BACKEND FILTER EFFECT ================= */
 useEffect(() => {
   reloadProducts({
     page,
@@ -86,17 +85,14 @@ useEffect(() => {
     stock: stockFilter
   });
 }, [
+  page,
   search,
   selectedBrand,
   selectedCategory,
   selectedSubCategory,
   selectedChildCategory,
-  stockFilter,
-  page,
-  reloadProducts
+  stockFilter
 ]);
-
-
 
 
 

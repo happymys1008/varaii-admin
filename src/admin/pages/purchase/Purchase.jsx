@@ -339,9 +339,9 @@ const selected = row._skus.find(
       <option value="">Select SKU</option>
 
       {(row._skus || []).map(s => (
-        <option key={s._id} value={s._id}>
-          {s.skuCode} ({s.ram} / {s.storage})
-        </option>
+<option key={s._id} value={s._id}>
+  {s.skuCode}
+</option>
       ))}
     </select>
   ) : "-"}

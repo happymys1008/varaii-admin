@@ -3,7 +3,8 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState
+  useState,
+  useCallback
 } from "react";
 
 import {
@@ -54,33 +55,33 @@ const [productsMeta, setProductsMeta] = useState({
 
   /* ================= LOAD MASTER ================= */
 
-  const loadCatalog = async () => {
-    try {
-      setIsRefreshing(true);
+const loadCatalog = useCallback(async () => {
+  try {
+    setIsRefreshing(true);
 
-      const [catRes, subRes, childRes, brandRes] = await Promise.all([
-        fetchCategories(),
-        fetchSubCategories(),
-        fetchChildCategories(),
-        fetchBrands()
-      ]);
+    const [catRes, subRes, childRes, brandRes] = await Promise.all([
+      fetchCategories(),
+      fetchSubCategories(),
+      fetchChildCategories(),
+      fetchBrands()
+    ]);
 
-      setCategories(normalize(catRes));
-      setSubCategories(normalize(subRes));
-      setChildCategories(normalize(childRes));
-      setBrands(normalize(brandRes));
+    setCategories(normalize(catRes));
+    setSubCategories(normalize(subRes));
+    setChildCategories(normalize(childRes));
+    setBrands(normalize(brandRes));
 
-      setIsInitialLoad(false);
-      setIsRefreshing(false);
-    } catch (err) {
-      console.error("Admin catalog load failed", err);
-      setIsRefreshing(false);
-    }
-  };
+    setIsInitialLoad(false);
+    setIsRefreshing(false);
+  } catch (err) {
+    console.error("Admin catalog load failed", err);
+    setIsRefreshing(false);
+  }
+}, []);   // 🔥 IMPORTANT
 
   /* ================= LOAD PRODUCTS ================= */
 
-const loadProducts = async ({
+const loadProducts = useCallback(async ({
   page = 1,
   limit = 20,
   search,
@@ -91,6 +92,7 @@ const loadProducts = async ({
   stock,
   sort
 } = {}) => {
+
   setProductsLoading(true);
   setProductsError("");
 
@@ -117,26 +119,28 @@ const loadProducts = async ({
   } finally {
     setProductsLoading(false);
   }
-};
+
+}, []);   // 🔥 IMPORTANT
 
   /* ================= LOAD INVENTORY (ADMIN API) ================= */
 
-  const loadInventory = async () => {
-    try {
-      const res = await api.get("/inventory");
-      setVariantInventory(normalize(res));
-    } catch {
-      setVariantInventory([]);
-    }
-  };
+const loadInventory = useCallback(async () => {
+  try {
+    const res = await api.get("/inventory");
+    setVariantInventory(normalize(res));
+  } catch {
+    setVariantInventory([]);
+  }
+}, []);   // 🔥 IMPORTANT
+
+
 
   /* ================= INITIAL ================= */
 
 useEffect(() => {
   loadCatalog();
-  loadProducts({ page: 1, limit: 20 });
   loadInventory();
-}, []);
+}, [loadCatalog, loadInventory]);
 
   /* ================= CATEGORY TREE ================= */
 
