@@ -18,7 +18,9 @@ const [form, setForm] = useState({
   brandId: "",
   trackingType: "QTY",
   hasVariants: false,
-  variantConfig: []
+  variantConfig: [],
+  mrp: "",
+  sellingPrice: ""
 });
 
 
@@ -77,7 +79,9 @@ const payload = {
   brandId: form.brandId || null,
   trackingType: form.trackingType,
   hasVariants: form.hasVariants,
-  variantConfig: form.hasVariants ? form.variantConfig : []
+  variantConfig: form.hasVariants ? form.variantConfig : [],
+  mrp: form.hasVariants ? undefined : Number(form.mrp),
+  sellingPrice: form.hasVariants ? undefined : Number(form.sellingPrice)
 };
 
     try {
@@ -191,6 +195,27 @@ const payload = {
     </div>
   )}
 </div>
+
+{/* 🔥 Price Fields (Only for Non-Variant Product) */}
+{!form.hasVariants && (
+  <>
+    <input
+      style={input}
+      type="number"
+      placeholder="MRP"
+      value={form.mrp}
+      onChange={e => update("mrp", e.target.value)}
+    />
+
+    <input
+      style={input}
+      type="number"
+      placeholder="Selling Price"
+      value={form.sellingPrice}
+      onChange={e => update("sellingPrice", e.target.value)}
+    />
+  </>
+)}
 
         <div style={buttonRow}>
           <button style={cancelBtn} onClick={onClose}>Cancel</button>

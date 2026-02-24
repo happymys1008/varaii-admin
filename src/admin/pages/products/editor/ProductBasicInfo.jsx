@@ -28,24 +28,40 @@ export default function ProductBasicInfo({
 
     setForm({
       name: product.name ?? "",
-      categoryId: product.categoryId ? String(product.categoryId) : "",
-      subCategoryId: product.subCategoryId
-        ? String(product.subCategoryId)
-        : "",
-      childCategoryId: product.childCategoryId
-        ? String(product.childCategoryId)
-        : "",
-      brandId: product.brandId ? String(product.brandId) : "",
+categoryId: product.categoryId?._id
+  ? String(product.categoryId._id)
+  : String(product.categoryId || ""),
+
+subCategoryId: product.subCategoryId?._id
+  ? String(product.subCategoryId._id)
+  : String(product.subCategoryId || ""),
+
+childCategoryId: product.childCategoryId?._id
+  ? String(product.childCategoryId._id)
+  : String(product.childCategoryId || ""),
+
+brandId: product.brandId?._id
+  ? String(product.brandId._id)
+  : String(product.brandId || ""),
       trackingType: product.trackingType ?? "QTY",
       hasVariants: Boolean(product.hasVariants),
 
       // ✅ SKU SYSTEM → price only for non-variant
-      mrp: product.hasVariants ? "" : product.mrp ?? "",
-      sellingPrice: product.hasVariants
-        ? ""
-        : product.sellingPrice ?? ""
+mrp: product.hasVariants
+  ? ""
+  : product.skus?.[0]?.mrp ?? "",
+
+sellingPrice: product.hasVariants
+  ? ""
+  : product.skus?.[0]?.sellingPrice ?? "",
     });
   }, [product]);
+
+/* ================= DEFAULT SKU (NON VARIANT) ================= */
+const defaultSkuCode =
+  !form.hasVariants && product?.skus?.[0]?.skuCode
+    ? product.skus[0].skuCode
+    : "";
 
   const update = (key, value) => {
     setForm(prev => ({ ...prev, [key]: value }));
@@ -155,6 +171,19 @@ export default function ProductBasicInfo({
           </option>
         ))}
       </select>
+
+{/* 🔥 SKU Code (Only for Non-Variant Product) */}
+{!form.hasVariants && defaultSkuCode && (
+  <input
+    type="text"
+    value={defaultSkuCode}
+    disabled
+    placeholder="SKU Code"
+  />
+)}
+
+
+
 
       {/* PRICE ONLY FOR NON VARIANT */}
       {!form.hasVariants && (

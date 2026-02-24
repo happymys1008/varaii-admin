@@ -45,37 +45,15 @@ export default function InventoryCategory() {
     search
   ]);
 
-  /* ================= LOAD SKU LABELS ================= */
-  useEffect(() => {
-    const loadSkuLabels = async () => {
-      const map = {};
-
-      for (const product of products) {
-        if (!product.hasVariants) continue;
-
-        const colors = await listColors(product._id);
-
-        for (const color of colors) {
-          const skus = await listSkusByColor(color._id);
-          skus.forEach((sku) => {
-            map[String(sku._id)] = sku.skuCode;
-          });
-        }
-      }
-
-      setSkuMap(map);
-    };
-
-    if (products.length) loadSkuLabels();
-  }, [products]);
+ 
 
   /* ================= BUILD ROWS ================= */
   const rows = useMemo(() => {
     return inventory
       .map((inv) => {
-        const product = products.find(
-          (p) => String(p._id) === String(inv.productId)
-        );
+const product = products.find(
+  (p) => String(p._id) === String(inv.productId?._id || inv.productId)
+);
         if (!product) return null;
 
         if (selectedCategoryId &&
@@ -96,9 +74,7 @@ export default function InventoryCategory() {
 
         return {
           productName: product.name,
-          skuLabel: inv.skuId
-            ? skuMap[String(inv.skuId)] || "—"
-            : "Non-Variant",
+skuLabel: inv.skuId?.skuCode || "—",
           brand: brand?.name || "-",
           trackingType: product.trackingType,
           qty: Number(inv.qty || 0),

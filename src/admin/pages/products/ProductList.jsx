@@ -33,7 +33,16 @@ export default function ProductList({ products = [], inventory = [] }) {
       {/* ROWS */}
       {products.map((p) => {
 const qty = inventory
-  .filter(i => String(i.productId) === String(p.id))
+  .filter(i => {
+    if (!i || !i.productId) return false;
+
+    const invProductId =
+      typeof i.productId === "object" && i.productId !== null
+        ? i.productId._id
+        : i.productId;
+
+    return String(invProductId) === String(p._id);
+  })
   .reduce((sum, i) => sum + Number(i.qty || 0), 0);
 
 

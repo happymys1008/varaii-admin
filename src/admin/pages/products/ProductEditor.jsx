@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { updateProduct } from "../../services/productService";
+import api from "../../../core/api/api";
 
 
 
@@ -32,18 +33,20 @@ export default function ProductEditor() {
 
 
   /* ================= LOAD PRODUCT (EDIT MODE) ================= */
-  useEffect(() => {
-    if (isCreate) return;
-    if (!products || products.length === 0) return;
+useEffect(() => {
+  if (isCreate) return;
 
-    const existing = products.find(
-      p => String(p._id || p.id) === String(id)   // ✅ STRONG GUARD
-    );
-
-    if (existing) {
-      setProduct(existing);
+  const loadProduct = async () => {
+    try {
+      const res = await api.get(`/products/${id}`);
+      setProduct(res.data);
+    } catch (err) {
+      console.error("Failed loading product", err);
     }
-  }, [id, isCreate, products]);
+  };
+
+  loadProduct();
+}, [id, isCreate]);
 
 
 
@@ -67,21 +70,23 @@ export default function ProductEditor() {
   brands={brands}
 onSave={async ({ product: formProduct }) => {
   try {
-    const updatedProduct = await updateProduct({
+    await updateProduct({
       _id: product._id,
       ...formProduct,
       hasVariants: product?.hasVariants
     });
 
-    setProduct(updatedProduct);
+    // 🔥 IMPORTANT: reload full product with SKUs
+    const fresh = await api.get(`/products/${product._id}`);
+    setProduct(fresh.data);
 
     alert("Saved successfully ✅");
+
   } catch (err) {
     console.error("❌ Save failed", err);
     alert("Save failed. Please try again.");
   }
-}}
-/>
+}}/>
 
 
       {/* STEP 3+ : UNLOCK AFTER SAVE */}
