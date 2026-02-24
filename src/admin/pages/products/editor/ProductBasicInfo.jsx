@@ -8,7 +8,7 @@ export default function ProductBasicInfo({
   brands = [],
   onSave
 }) {
-  const isEdit = Boolean(product?._id);
+ 
 
   const [form, setForm] = useState({
     name: "",

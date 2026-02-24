@@ -19,14 +19,13 @@ export default function ProductEditor() {
   const { id } = useParams();
 
 
-  const {
-    products,
-    categories,
-    subCategories,
-    childCategories,
-    brands,
-    productsLoading   // ✅ CORRECT FLAG
-  } = useAdminCatalog();
+const {
+  categories,
+  subCategories,
+  childCategories,
+  brands,
+  productsLoading
+} = useAdminCatalog();
 
   const isCreate = !id;
   const [product, setProduct] = useState(null);

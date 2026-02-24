@@ -91,7 +91,8 @@ useEffect(() => {
   selectedCategory,
   selectedSubCategory,
   selectedChildCategory,
-  stockFilter
+  stockFilter,
+  reloadProducts   // ✅ ADD THIS
 ]);
 
 

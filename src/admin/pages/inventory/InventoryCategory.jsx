@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAdminCatalog } from "../../context/AdminCatalogContext";
-import { listColors } from "../../services/productColorService";
-import { listSkusByColor } from "../../services/skuService";
 import "./InventoryCategory.css";
 
 export default function InventoryCategory() {
@@ -22,7 +20,6 @@ export default function InventoryCategory() {
   const [selectedBrandId, setSelectedBrandId] = useState(""); // ✅ Added
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [skuMap, setSkuMap] = useState({});
   const [modalImeis, setModalImeis] = useState(null);
 
   const perPage = 6;
@@ -93,7 +90,6 @@ skuLabel: inv.skuId?.skuCode || "—",
     selectedSubCategoryId,
     selectedChildCategoryId,
     selectedBrandId,
-    skuMap,
     search
   ]);
 
