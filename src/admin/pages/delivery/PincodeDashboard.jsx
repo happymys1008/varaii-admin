@@ -173,43 +173,6 @@ const load = async () => {
   };
 
 
-/* ================= CHIP COMPONENT ================= */
-const Chip = ({ label, value, highlight }) => (
-  <div
-    style={{
-      background: highlight ? "#eef2ff" : "#f5f5f5",
-      border: highlight ? "2px solid #4f46e5" : "1px solid #e5e5e5",
-      padding: "8px 14px",
-      borderRadius: 8,
-      minWidth: 100,
-      boxShadow: highlight ? "0 2px 6px rgba(79,70,229,0.2)" : "none",
-    }}
-  >
-    <div style={{ fontSize: 11, color: "#666" }}>
-      {label}
-    </div>
-    <div style={{ fontWeight: 700 }}>
-      {value || "-"}
-    </div>
-  </div>
-);
-
-/* ================= STATUS BADGE ================= */
-const StatusBadge = ({ active }) => (
-  <div
-    style={{
-      padding: "8px 16px",
-      borderRadius: 30,
-      fontSize: 13,
-      fontWeight: 700,
-      background: active ? "#e6f9f0" : "#ffeaea",
-      color: active ? "#0f9d58" : "#d93025",
-      border: active ? "1px solid #0f9d58" : "1px solid #d93025",
-    }}
-  >
-    {active ? "Active" : "Inactive"}
-  </div>
-);
 
   /* ================= UI ================= */
 
