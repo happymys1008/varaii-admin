@@ -1,176 +1,510 @@
 import { useEffect, useState } from "react";
-import {
-  getPincodes,
-  addOrUpdatePincode,
-  deletePincode
-} from "../../../utils/pincodeService";
-
-
+import api from "../../../core/api/api";
 import { lookupPincode } from "../../../utils/pincodeLookup";
+import DeliveryRuleEditModal from "./DeliveryRuleEditModal";
 
-
-const emptyForm = {
-  pincode: "",
-  city: "",
-  state: "",
-  deliveryDays: "",
-  shippingCharge: "",
-  codAvailable: true,
-  deliveryAvailable: true
-};
+const STATE_OPTIONS = [
+  { code: "AN", name: "Andaman and Nicobar Islands" },
+  { code: "AP", name: "Andhra Pradesh" },
+  { code: "AR", name: "Arunachal Pradesh" },
+  { code: "AS", name: "Assam" },
+  { code: "BR", name: "Bihar" },
+  { code: "CH", name: "Chandigarh" },
+  { code: "CT", name: "Chhattisgarh" },
+  { code: "DL", name: "Delhi" },
+  { code: "GA", name: "Goa" },
+  { code: "GJ", name: "Gujarat" },
+  { code: "HR", name: "Haryana" },
+  { code: "HP", name: "Himachal Pradesh" },
+  { code: "JH", name: "Jharkhand" },
+  { code: "KA", name: "Karnataka" },
+  { code: "KL", name: "Kerala" },
+  { code: "MP", name: "Madhya Pradesh" },
+  { code: "MH", name: "Maharashtra" },
+  { code: "PB", name: "Punjab" },
+  { code: "RJ", name: "Rajasthan" },
+  { code: "TN", name: "Tamil Nadu" },
+  { code: "UP", name: "Uttar Pradesh" },
+  { code: "WB", name: "West Bengal" },
+];
 
 export default function PincodeDashboard() {
-  const [list, setList] = useState([]);
-  const [form, setForm] = useState(emptyForm);
+  const [rules, setRules] = useState([]);
+  const [editingRule, setEditingRule] = useState(null);
+  const [activeTab, setActiveTab] = useState("PINCODE");
 
-  const load = () => {
-    setList(getPincodes());
-  };
+  const [form, setForm] = useState({
+    type: "PINCODE",
+    value: "",
+    area: "",
+    city: "",
+    stateName: "",
+    deliveryDays: "",
+    shippingCharge: "",
+    freeDeliveryAbove: "",
+    codAvailable: true,
+  });
+
+
 
   useEffect(() => {
     load();
   }, []);
 
-  const save = () => {
-    if (!form.pincode || !form.city || !form.state) {
-      alert("Pincode, City, State required");
-      return;
+/* ================= LOAD RULES ================= */
+
+const load = async () => {
+  const res = await api.get("/delivery");
+
+  const sorted = (res.data || []).sort((a, b) => {
+    const order = {
+      GLOBAL: 1,
+      STATE: 2,
+      PINCODE: 3,
+    };
+
+    // Type priority sorting
+    if (order[a.type] !== order[b.type]) {
+      return order[a.type] - order[b.type];
     }
 
-    addOrUpdatePincode(form);
-    setForm(emptyForm);
-    load();
-  };
+    // Same type sorting
+    if (a.type === "STATE") {
+      return (a.value || "").localeCompare(b.value || "");
+    }
 
-  const editRow = (row) => {
-    setForm(row);
-  };
+    if (a.type === "PINCODE") {
+      return Number(a.value) - Number(b.value);
+    }
 
-  return (
-    <div style={{ padding: 20 }}>
-      <h2>Pincode Delivery Manager</h2>
+    return 0;
+  });
 
-      {/* FORM */}
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 20 }}>
-<input
-  placeholder="Pincode"
-  value={form.pincode}
-  onChange={async e => {
-    const pin = e.target.value.replace(/\D/g, "");
-    setForm({ ...form, pincode: pin });
+  setRules(sorted);
+};
 
-    if (pin.length === 6) {
-      const info = await lookupPincode(pin);
+  /* ================= PINCODE AUTO FETCH ================= */
+
+  const handlePincodeChange = async (pin) => {
+    const cleanPin = pin.replace(/\D/g, "").slice(0, 6);
+
+    setForm(prev => ({
+      ...prev,
+      value: cleanPin,
+    }));
+
+    if (cleanPin.length === 6) {
+      const info = await lookupPincode(cleanPin);
 
       if (info) {
-        setForm(f => ({
-          ...f,
-          pincode: pin,
-          city: info.city,
-          state: info.state
+        setForm(prev => ({
+          ...prev,
+          value: cleanPin,
+          area: info.area || "",
+          city: info.city || "",
+          stateName: info.state || "",
         }));
       }
     }
-  }}
-  style={{
-    border: form.city && form.state ? "2px solid #22c55e" : "1px solid #ccc",
-    outline: "none"
-  }}
-/>
+  };
+
+  /* ================= ADD RULE ================= */
+
+  const addRule = async () => {
+    if (!form.deliveryDays)
+      return alert("Delivery Days required");
+
+    if (form.type === "PINCODE" && form.value.length !== 6)
+      return alert("Valid 6 digit pincode required");
+
+    if (form.type === "STATE" && !form.value)
+      return alert("Select state");
+
+    if (form.type === "GLOBAL") {
+      const alreadyGlobal = rules.find(
+        r => r.type === "GLOBAL"
+      );
+      if (alreadyGlobal)
+        return alert("Only one GLOBAL rule allowed");
+    }
+
+    await api.post("/delivery", {
+      type: form.type,
+      value:
+        form.type === "GLOBAL"
+          ? null
+          : form.value?.trim(),
+      area: form.area,
+      city: form.city,
+      stateName: form.stateName,
+      deliveryDays: Number(form.deliveryDays),
+      shippingCharge: Number(form.shippingCharge || 0),
+      freeDeliveryAbove: Number(
+        form.freeDeliveryAbove || 0
+      ),
+      codAvailable: form.codAvailable,
+    });
+
+    resetForm();
+    load();
+  };
+
+  const resetForm = () => {
+    setForm({
+      type: activeTab,
+      value: "",
+      area: "",
+      city: "",
+      stateName: "",
+      deliveryDays: "",
+      shippingCharge: "",
+      freeDeliveryAbove: "",
+      codAvailable: true,
+    });
+  };
+
+  /* ================= DELETE ================= */
+
+  const deleteRule = async (id) => {
+    if (!window.confirm("Delete this rule?"))
+      return;
+    await api.delete(`/delivery/${id}`);
+    load();
+  };
 
 
-<input
-  placeholder="City"
-  value={form.city}
-  onChange={e => setForm({ ...form, city: e.target.value })}
-  style={{
-    background: form.city ? "#ecfdf5" : "white",
-    border: "1px solid #ccc"
-  }}
-/>
+/* ================= CHIP COMPONENT ================= */
+const Chip = ({ label, value, highlight }) => (
+  <div
+    style={{
+      background: highlight ? "#eef2ff" : "#f5f5f5",
+      border: highlight ? "2px solid #4f46e5" : "1px solid #e5e5e5",
+      padding: "8px 14px",
+      borderRadius: 8,
+      minWidth: 100,
+      boxShadow: highlight ? "0 2px 6px rgba(79,70,229,0.2)" : "none",
+    }}
+  >
+    <div style={{ fontSize: 11, color: "#666" }}>
+      {label}
+    </div>
+    <div style={{ fontWeight: 700 }}>
+      {value || "-"}
+    </div>
+  </div>
+);
 
+/* ================= STATUS BADGE ================= */
+const StatusBadge = ({ active }) => (
+  <div
+    style={{
+      padding: "8px 16px",
+      borderRadius: 30,
+      fontSize: 13,
+      fontWeight: 700,
+      background: active ? "#e6f9f0" : "#ffeaea",
+      color: active ? "#0f9d58" : "#d93025",
+      border: active ? "1px solid #0f9d58" : "1px solid #d93025",
+    }}
+  >
+    {active ? "Active" : "Inactive"}
+  </div>
+);
 
-<input
-  placeholder="State"
-  value={form.state}
-  onChange={e => setForm({ ...form, state: e.target.value })}
-  style={{
-    background: form.state ? "#ecfdf5" : "white",
-    border: "1px solid #ccc"
-  }}
-/>
+  /* ================= UI ================= */
+
+  return (
+    <div style={{ padding: 20 }}>
+      <h2>🚚 Delivery Rule Manager</h2>
+
+      {/* ===== TABS ===== */}
+      <div style={{ marginBottom: 20 }}>
+        {["GLOBAL", "STATE", "PINCODE"].map(
+          tab => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                setForm(prev => ({
+                  ...prev,
+                  type: tab,
+                }));
+              }}
+              style={{
+                marginRight: 10,
+                background:
+                  activeTab === tab
+                    ? "#000"
+                    : "#ccc",
+                color: "#fff",
+              }}
+            >
+              {tab}
+            </button>
+          )
+        )}
+      </div>
+
+      {/* ===== ADD FORM ===== */}
+      <div
+        style={{
+          marginBottom: 30,
+          border: "1px solid #ddd",
+          padding: 15,
+        }}
+      >
+        <h3>Add {activeTab} Rule</h3>
+
+        {activeTab === "PINCODE" && (
+          <>
+            <input
+              placeholder="6 Digit Pincode"
+              value={form.value}
+              onChange={(e) =>
+                handlePincodeChange(
+                  e.target.value
+                )
+              }
+            />
+
+            <input
+              placeholder="Area"
+              value={form.area}
+              readOnly
+            />
+            <input
+              placeholder="City"
+              value={form.city}
+              readOnly
+            />
+            <input
+              placeholder="State"
+              value={form.stateName}
+              readOnly
+            />
+          </>
+        )}
+
+        {activeTab === "STATE" && (
+          <select
+            value={form.value}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                value: e.target.value,
+              })
+            }
+          >
+            <option value="">
+              Select State
+            </option>
+            {STATE_OPTIONS.map(s => (
+              <option
+                key={s.code}
+                value={s.code}
+              >
+                {s.name} ({s.code})
+              </option>
+            ))}
+          </select>
+        )}
 
         <input
           type="number"
           placeholder="Delivery Days"
           value={form.deliveryDays}
-          onChange={e => setForm({ ...form, deliveryDays: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              deliveryDays: e.target.value,
+            })
+          }
         />
 
         <input
           type="number"
-          placeholder="Shipping Charge"
+          placeholder="Shipping ₹"
           value={form.shippingCharge}
-          onChange={e => setForm({ ...form, shippingCharge: e.target.value })}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              shippingCharge:
+                e.target.value,
+            })
+          }
+        />
+
+        <input
+          type="number"
+          placeholder="Free Delivery Above ₹"
+          value={form.freeDeliveryAbove}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              freeDeliveryAbove:
+                e.target.value,
+            })
+          }
         />
 
         <label>
+          COD Available
           <input
             type="checkbox"
             checked={form.codAvailable}
-            onChange={e => setForm({ ...form, codAvailable: e.target.checked })}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                codAvailable:
+                  e.target.checked,
+              })
+            }
           />
-          COD Available
         </label>
 
-        <button onClick={save}>Save / Update</button>
+        <br />
+        <button onClick={addRule}>
+          ➕ Add Rule
+        </button>
       </div>
 
-      {/* TABLE */}
-      <table border="1" cellPadding="8" style={{ width: "100%" }}>
-        <thead>
-          <tr>
-            <th>Pincode</th>
-            <th>City</th>
-            <th>State</th>
-            <th>Days</th>
-            <th>Charge</th>
-            <th>COD</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+      {/* ===== RULE LIST ===== */}
+      <h3>Existing Rules</h3>
 
-        <tbody>
-          {list.length === 0 && (
-            <tr>
-              <td colSpan="7" align="center">No pincodes added</td>
-            </tr>
-          )}
+      {rules.map(r => (
+<div
+  key={r._id}
+  style={{
+    padding: 15,
+    border: "1px solid #e5e5e5",
+    borderRadius: 8,
+    marginBottom: 15,
+    background: "#fff",
+  }}
+>
+  {/* TYPE HEADER */}
+  <div style={{ fontWeight: 600, marginBottom: 8 }}>
+    {r.type === "GLOBAL" && "🌍 GLOBAL RULE"}
+    {r.type === "STATE" && `🗺 STATE RULE (${r.value})`}
+    {r.type === "PINCODE" && "📍 PINCODE RULE"}
+  </div>
 
-          {list.map(p => (
-            <tr key={p.pincode}>
-              <td>{p.pincode}</td>
-              <td>{p.city}</td>
-              <td>{p.state}</td>
-              <td>{p.deliveryDays}</td>
-              <td>₹{p.shippingCharge}</td>
-              <td>{p.codAvailable ? "Yes" : "No"}</td>
-              <td>
-                <button onClick={() => editRow(p)}>Edit</button>
-                <button
-                  style={{ marginLeft: 8 }}
-                  onClick={() => {
-                    deletePincode(p.pincode);
-                    load();
-                  }}
-                >
-                  Delete
-                </button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+  {/* PINCODE STRUCTURED VIEW */}
+{r.type === "PINCODE" && (
+  <div
+    style={{
+      display: "flex",
+      gap: 20,
+      flexWrap: "wrap",
+      marginBottom: 12,
+      marginTop: 8,
+    }}
+  >
+    <div
+      style={{
+        background: "#f3f6ff",
+        padding: "8px 12px",
+        borderRadius: 6,
+        border: "1px solid #dce3ff",
+        minWidth: 100,
+      }}
+    >
+      <div style={{ fontSize: 12, color: "#666" }}>
+        PINCODE
+      </div>
+      <div style={{ fontWeight: 600 }}>
+        {r.value}
+      </div>
+    </div>
+
+    <div
+      style={{
+        background: "#f9f9f9",
+        padding: "8px 12px",
+        borderRadius: 6,
+        border: "1px solid #eee",
+        minWidth: 120,
+      }}
+    >
+      <div style={{ fontSize: 12, color: "#666" }}>
+        AREA
+      </div>
+      <div style={{ fontWeight: 600 }}>
+        {r.area || "-"}
+      </div>
+    </div>
+
+    <div
+      style={{
+        background: "#f9f9f9",
+        padding: "8px 12px",
+        borderRadius: 6,
+        border: "1px solid #eee",
+        minWidth: 120,
+      }}
+    >
+      <div style={{ fontSize: 12, color: "#666" }}>
+        CITY
+      </div>
+      <div style={{ fontWeight: 600 }}>
+        {r.city || "-"}
+      </div>
+    </div>
+
+    <div
+      style={{
+        background: "#f9f9f9",
+        padding: "8px 12px",
+        borderRadius: 6,
+        border: "1px solid #eee",
+        minWidth: 140,
+      }}
+    >
+      <div style={{ fontSize: 12, color: "#666" }}>
+        STATE
+      </div>
+      <div style={{ fontWeight: 600 }}>
+        {r.stateName || "-"}
+      </div>
+    </div>
+  </div>
+)}
+
+  {/* COMMON INFO */}
+  <div style={{ marginBottom: 6 }}>
+    <strong>Delivery Days:</strong> {r.deliveryDays}
+  </div>
+
+  <div style={{ marginBottom: 6 }}>
+    <strong>Shipping:</strong> ₹{r.shippingCharge}
+  </div>
+
+  <div style={{ marginBottom: 6 }}>
+    <strong>Status:</strong>{" "}
+    {r.isActive ? "Active" : "Inactive"}
+  </div>
+
+  <div style={{ marginTop: 10 }}>
+    <button onClick={() => setEditingRule(r)}>✏ Edit</button>
+    <button
+      style={{ marginLeft: 10 }}
+      onClick={() => deleteRule(r._id)}
+    >
+      🗑 Delete
+    </button>
+  </div>
+</div>
+      ))}
+
+      {editingRule && (
+        <DeliveryRuleEditModal
+          rule={editingRule}
+          onClose={() =>
+            setEditingRule(null)
+          }
+          onSaved={load}
+        />
+      )}
     </div>
   );
 }

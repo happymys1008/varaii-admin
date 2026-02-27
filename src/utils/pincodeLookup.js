@@ -10,16 +10,26 @@ export const lookupPincode = async (pincode) => {
 
     const data = res.data;
 
-    if (!data?.[0] || data[0].Status !== "Success") return null;
+    if (!Array.isArray(data) || data[0]?.Status !== "Success") {
+      return null;
+    }
 
-    const postOffice = data[0].PostOffice?.[0];
-    if (!postOffice) return null;
+    const postOffices = data[0]?.PostOffice;
+    if (!Array.isArray(postOffices) || postOffices.length === 0) {
+      return null;
+    }
+
+    const postOffice = postOffices[0];
 
     return {
+      area: postOffice.Name || "",          // 🔥 AREA (Post Office Name)
       city: postOffice.District || "",
       state: postOffice.State || "",
+      block: postOffice.Block || "",
+      division: postOffice.Division || "",
     };
   } catch (err) {
+    console.error("Pincode lookup failed:", err.message);
     return null;
   }
 };
